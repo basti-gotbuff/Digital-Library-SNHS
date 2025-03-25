@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sum-ag National High School Digital Library</title>
+        <style>
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #fff2f2;
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+                animation: fadeIn 1s forwards;
+                overflow-y: scroll;
+                /* Ensure scroll bar on the right side */
+            }
+
+            header {
+                background-color: #ffe600;
+                color: white;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                animation: slideIn 1s forwards;
+            }
+
+            nav {
+                background-color: #000000;
+                color: white;
+                padding: 10px;
+                text-align: center;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                animation: slideIn 1s forwards;
+            }
+
+            nav a {
+                color: white;
+                margin: 0 15px;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+
+            nav a:hover {
+                color: #fbff00;
+            }
+
+            .container {
+                flex: 1;
+                padding: 20px;
+                animation: fadeIn 1s forwards;
+            }
+
+            .subject-list, .topic-list, .module-list {
+                list-style-type: none;
+                padding: 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+                justify-content: center;
+            }
+
+            .subject-list li, .topic-list li, .module-list li {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 200px;
+                padding: 10px;
+                background-color: #ffffff;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s, box-shadow 0.3s;
+                cursor: pointer;
+                opacity: 0;
+                animation: fadeIn 1s forwards;
+            }
+
+            .subject-list li:hover, .topic-list li:hover, .module-list li:hover {
+                transform: scale(1.05);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            }
+
+            .subject-list img, .topic-list img, .module-list img {
+                width: 100%;
+                height: 250px;
+                /* Adjusted height to make all images consistent */
+                object-fit: cover;
+                /* Ensure the image covers the entire area */
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+
+            .subject-list a, .topic-list a, .module-list a {
+                color: #000000;
+                text-decoration: none;
+                font-weight: bold;
+                text-align: center;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .subject-list a:hover, .topic-list a:hover, .module-list a:hover {
+                text-decoration: underline;
+            }
+
+            footer {
+                background-color: #000000;
+                color: white;
+                text-align: center;
+                padding: 10px;
+                position: relative;
+                bottom: 0;
+                width: 100%;
+                box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+                animation: slideIn 1s forwards;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateY(-20px);
+                }
+
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                to {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            @media (max-width: 768px) {
+                .subject-list li, .topic-list li, .module-list li {
+                    width: 150px;
+                }
+
+                .book-details img {
+                    width: 200px;
+                    height: 300px;
+                }
+
+                .book-details .details h2 {
+                    font-size: 20px;
+                }
+
+                .book-details .details .book-info {
+                    font-size: 14px;
+                }
+
+                .book-details .details .book-synopsis {
+                    font-size: 12px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .subject-list li, .topic-list li, .module-list li {
+                    width: 100px;
+                }
+
+                .book-details img {
+                    width: 150px;
+                    height: 200px;
+                }
+
+                .book-details .details h2 {
+                    font-size: 16px;
+                }
+
+                .book-details .details .book-info {
+                    font-size: 12px;
+                }
+
+                .book-details .details .book-synopsis {
+                    font-size: 10px;
+                }
+            }
+
+            .search-bar {
+                margin: 20px auto;
+                text-align: center;
+            }
+
+            .search-bar input {
+                width: 80%;
+                max-width: 500px;
+                padding: 10px;
+                font-size: 16px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+        </style>
+        <script>
+            function checkAdmin() {
+                const isAdmin = localStorage.getItem('isAdmin');
+                if (isAdmin !== 'true') {
+                    alert('You must be logged in as admin to view this page.');
+                    window.location.href = 'login.html';
+                }
+            }
+
+            function showTopics(subject) {
+                const allSubjects = document.querySelectorAll('.subject-list li');
+                allSubjects.forEach(sub => {
+                    sub.style.display = 'none';
+                }
+                );
+
+                const topics = document.querySelectorAll(`.topic-list[data-subject="${subject}"]`);
+                topics.forEach(topic => {
+                    topic.style.display = 'flex';
+                }
+                );
+            }
+
+            function showModules(topic) {
+                const allTopics = document.querySelectorAll('.topic-list li');
+                allTopics.forEach(top => {
+                    top.style.display = 'none';
+                }
+                );
+
+                const modules = document.querySelectorAll(`.module-list[data-topic="${topic}"]`);
+                modules.forEach(module => {
+                    module.style.display = 'flex';
+                }
+                );
+            }
+            document.addEventListener('DOMContentLoaded', () => {
+                const subjectItems = document.querySelectorAll('.subject-list li');
+                subjectItems.forEach(subjectItem => {
+                    subjectItem.addEventListener('click', () => {
+                        const subject = subjectItem.dataset.subject;
+                        showTopics(subject);
+                    }
+                    );
+                }
+                );
+
+                const topicItems = document.querySelectorAll('.topic-list li');
+                topicItems.forEach(topicItem => {
+                    topicItem.addEventListener('click', () => {
+                        const topic = topicItem.dataset.topic;
+                        showModules(topic);
+                    }
+                    );
+                }
+                );
+            }
+            );
+            subjects.forEach(subject => {
+                const text = subject.textContent.toLowerCase();
+                subject.style.display = text.includes(input) ? 'flex' : 'none';
+            }
+            );
+
+            topics.forEach(topic => {
+                const text = topic.textContent.toLowerCase();
+                topic.style.display = text.includes(input) ? 'flex' : 'none';
+            }
+            );
+
+            modules.forEach(module => {
+                const text = module.textContent.toLowerCase();
+                module.style.display = text.includes(input) ? 'flex' : 'none';
+            }
+            );
+            function goBack() {
+                window.history.back();
+            }
+            function goBackToSubjects() {
+                const allSubjects = document.querySelectorAll('.subject-list li');
+                const allTopics = document.querySelectorAll('.topic-list li');
+                const allModules = document.querySelectorAll('.module-list li');
+
+                allSubjects.forEach(subject => {
+                    subject.style.display = 'flex';
+                }
+                );
+
+                allTopics.forEach(topic => {
+                    topic.style.display = 'none';
+                }
+                );
+
+                allModules.forEach(module => {
+                    module.style.display = 'none';
+                }
+                );
+            }
+            function goToParentFolder() {
+                // Replace 'index.html' with the actual parent folder or page URL
+                window.location.href = 'index.html';
+            }
+            function checkPage() {
+                // Check if the current page is the home page
+                const isHomePage = window.location.pathname.endsWith("index.html");
+
+                // Show or hide the back button based on the page
+                const backButton = document.getElementById("backButton");
+                if (isHomePage) {
+                    backButton.style.display = "none";
+                    // Hide on home page
+                } else {
+                    backButton.style.display = "block";
+                    // Show on other pages
+                }
+            }
+            function searchContent() {
+                const input = document.getElementById("searchInput").value.toLowerCase();
+                const subjects = document.querySelectorAll(".subject-list li");
+                const topics = document.querySelectorAll(".topic-list li");
+                const modules = document.querySelectorAll(".module-list li");
+
+                // Filter subjects
+                subjects.forEach(subject => {
+                    const text = subject.textContent.toLowerCase();
+                    subject.style.display = text.includes(input) ? "flex" : "none";
+                }
+                );
+
+                // Filter topics
+                topics.forEach(topic => {
+                    const text = topic.textContent.toLowerCase();
+                    topic.style.display = text.includes(input) ? "flex" : "none";
+                }
+                );
+
+                // Filter modules
+                modules.forEach(module => {
+                    const text = module.textContent.toLowerCase();
+                    module.style.display = text.includes(input) ? "flex" : "none";
+                }
+                );
+            }
+            function searchModules() {
+                const input = document.getElementById("searchInput").value.toLowerCase();
+                const modules = document.querySelectorAll(".module-list li");
+
+                modules.forEach(module => {
+                    const text = module.innerText.toLowerCase();
+                    if (text.includes(input)) {
+                        module.style.display = "block";
+                    } else {
+                        module.style.display = "none";
+                    }
+                }
+                );
+            }
+        </script>
+    </head>
+    <body onload="checkPage()">
+        <header>
+            <h1>Books</h1>
+        </header>
+        <nav>
+            <div>
+                <a href="index.html">Home</a>
+                <a href="books.html">Books</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </nav>
+        <div class="container">
+            <!-- Add this search bar at the top of your page -->
+            <div class="container">
+                <!-- Add this search bar at the top of your page -->
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search for modules, topics, or subjects..." onkeyup="searchContent()">
+                </div>
+                <h2>Available Subjects</h2>
+        <ul class="subject-list">
+            <li data-subject="General Mathematics">
+                <img src="https://th.bing.com/th/id/OIP.XDs0ygvqSMi_Dh5pCmDC7wHaKe?w=194&h=274&c=7&r=0&o=5&pid=1.7" alt="General Mathematics">
+                <div>
+                    <a href="#">General Mathematics</a>
+                </div>
+            </li>
+            <li data-subject="Oral Communication">
+                <img src="https://th.bing.com/th/id/OIP.PhOvscUrSh-YCCrMm1g-mQHaKe?rs=1&pid=ImgDetMain" alt="Oral Communication">
+                <div>
+                    <a href="#">Oral Communication</a>
+                </div>
+            </li>
+            <li data-subject="Earth And Life Science">
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484501627_1284044952891630_2518402022251362908_n.jpg?stp=dst-jpg_p480x480_tt6&_nc_cat=103&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGNGXqHAOKwyIOaTpW26ovpXbUPX6ElZKldtQ9foSVkqTWDyUnAuLqQ-2A1WiPMv1dZL8iz7if8nNVknl2F2ku7&_nc_ohc=3tURnZmRD50Q7kNvgHVnWn8&_nc_oc=Adhf3tLIjq5ILuIIwKuy1UoCjhVSXkdPTWQ0FBbbaPZkfwwz5mIAMd3KhQ5UZptpZyI&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wHxp-idBaSl1T7lCmWBWK15J0bLsR8jgj2oTH8i4oOlJg&oe=67FC8B2D" alt="Earth And Life Science">
+                <div>
+                    <a href="#">Earth And Life Science</a>
+                </div>
+            </li>
+            <li data-subject="21st Century Literature">
+                <img src="https://th.bing.com/th/id/OIP.3zcO8F6g5D-_V7B1JKLwrQHaKe?rs=1&pid=ImgDetMain" alt="21st Century Literature">
+                <div>
+                    <a href="#">21st Century Literature</a>
+                </div>
+            </li>
+            <li data-subject="Media and Information Literacy">
+                <img src="https://th.bing.com/th/id/OIP.G-JEzO4fbw_jbRNPm3f8oAHaKe?rs=1&pid=ImgDetMain" alt="Media and Information Literacy">
+                <div>
+                    <a href="#">Media and Information Literacy</a>
+                </div>
+            </li>
+            <li data-subject="Personal Development">
+                <img src="https://th.bing.com/th/id/OIP.5l5CMCHQp4_26Owmoo00sAHaKe?w=208&h=294&c=7&r=0&o=5&dpr=1.3&pid=1.7" alt="Personal Development">
+                <div>
+                    <a href="#">Personal Development</a>
+                </div>
+            </li>
+            <li data-subject="Reading and Writing">
+                <img src="https://th.bing.com/th/id/OIP.buh58gftqAk8Q1zxoV1nGQHaKe?rs=1&pid=ImgDetMain" alt="Reading and Writing">
+                <div>
+                    <a href="#">Reading and Writing</a>
+                </div>
+            </li>
+            <li data-subject="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik">
+                <img src="https://d20ohkaloyme4g.cloudfront.net/img/document_thumbnails/11dcf05718689052159b5d388ff73449/thumb_1200_1698.png" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik">
+                <div>
+                    <a href="#">Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik</a>
+                </div>
+            </li>
+            <li data-subject="Statistics and Probability">
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/486469052_1737620590510825_8334995661286616102_n.png?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeERJpRqHGdQ4jS0Yf593MuGaaUHZUkK5YVppQdlSQrlhUD6MK4VyxleUeJSbFuaDyYSuD98E-SQZ_s6gv29JyYg&_nc_ohc=aERHFxRrlIEQ7kNvgFWwfKL&_nc_oc=Adk3rr3852jBg18htV7x65Y5abI7-HyUzJ0v50cK_okdpfTGvGweKFi3lhIRgnSQyRI&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wGc9C-_szHUwAn8tSHyU-pJ6vHagCpwGiYE8_k7Z_QsJQ&oe=680991B8">
+                <div>
+                    <a href="#">Statistics and Probability</a>
+                </div>
+            </li>
+            <li data-subject="Philosophy">
+                <img src="https://th.bing.com/th/id/OIP.XHlsLeUGe3H81mtalZ4dEgHaKe?rs=1&pid=ImgDetMain" alt="Philosophy">
+                <div>
+                    <a href="#">Philosophy</a>
+                </div>
+            </li>
+            <li data-subject="HOPE">
+                <img src="https://th.bing.com/th/id/OIP.aav9ajdWvkydbvEoj3-oogHaKe?w=1280&h=1811&rs=1&pid=ImgDetMain" alt="Personal Development">
+                <div>
+                    <a href="#">HOPE</a>
+                </div>
+            </li>
+            <li data-subject="Contemporary Arts in the Philippines">
+                <img src="https://th.bing.com/th/id/OIP.D6BPkxGfNBLpe1KExGZf5AHaKe?rs=1&pid=ImgDetMain" alt="Personal Development">
+                <div>
+                    <a href="#">Contemporary Arts in the Philippines</a>
+                </div>
+            </li>
+            <li data-subject="Understanding Culture, Society and Politics">
+                <img src="https://th.bing.com/th/id/OIP.dGT6ORy0-pi9ENc4TNI7bAHaKe?rs=1&pid=ImgDetMain" alt="Personal Development">
+                <div>
+                    <a href="#">Understanding Culture, Society and Politics</a>
+                </div>
+            </li>
+        </ul>
+        <h2>Available Topics</h2>
+        <ul class="topic-list" data-subject="General Mathematics" style="display: none;">
+            <li data-topic="General Mathematics 1">
+                <img src="https://th.bing.com/th/id/OIP.XDs0ygvqSMi_Dh5pCmDC7wHaKe?w=194&h=274&c=7&r=0&o=5&pid=1.7" alt="General Mathematics 1">
+                <div>
+                    <a href="#">General Mathematics 1</a>
+                        
+                    </a>
+                </div>
+            </li>
+            <li data-topic="General Mathematics 2">
+                <img src="https://th.bing.com/th/id/OIP.od7f8v_31qbG20i1SAiRNwHaKe?rs=1&pid=ImgDetMain" alt="Geometry">
+                <div>
+                    <a href="#">General Mathematics 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Oral Communication" style="display: none;">
+            <li data-topic="Oral Communication 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484328246_557946796649469_843334175480442418_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeE28nehlPyjmVRXgxUs_vRL_lTs6Fos0hf-VOzoWizSFy9sygIdX9j_bBhIHuLjl6NLB8_v7WFOQzkCC_vmhzUm&_nc_ohc=IXsek2Dw57kQ7kNvgFsZWoi&_nc_oc=AdhJYRh9TTKp4wqC5N27F3z1an6nZq6l-6qZGWj4kfefupBjwIkBu0SJruPBjj78kKI&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFeNUrw7R5biL3OuNriTRWZOensPde-Ktnq4K3onVas6A&oe=6800346F" alt="Oral Communication 1">
+                <div>
+                    <a href="#">Oral Communication 1</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Earth And Life Science" style="display: none;">
+            <li data-topic="Earth And Life Science 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/476497418_1202848164792105_4898466572791962382_n.png?_nc_cat=108&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeE8Kbe-UTdxkvjwQ6locRRaziet7l59mgjOJ63uXn2aCAHeH3vvQoxFs2bPjsU7uPqgp816BM82ZiNcEETSxiw3&_nc_ohc=YiObOitNn7IQ7kNvgGSkd5M&_nc_oc=Adiu8z4D3vbfdZc-BpjEwZGwDMj6Mk4vhwyactAbYKffFZb9VC-nPCKlUjJlKkr2Zvk&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHVefyoDSjfdENKXHke2XNmVD3J3YJ5a1_lgnvcq651KA&oe=68003382" alt="Module 1">
+                <div>
+                    <a href="#">Earth And Life Science 1</a>
+                </div>
+            </li>
+            <li data-topic="Earth And Life Science 2">
+                <img src="https://th.bing.com/th/id/OIP.LLEnT4aPBOSwe0nLDpwxrgHaKe?w=194&h=274&c=7&r=0&o=5&pid=1.7" alt="Module 2">
+                <div>
+                    <a href="#">Earth And Life Science 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="21st Century Literature" style="display: none;">
+            <li data-topic="21 Century Literature 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483371529_1020983896547953_825904111586219060_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGTRp38uk4alTBI-rfzxg6qPSzX-3tSroQ9LNf7e1KuhN4QwmAd6G26IAIFq0ivXIP5QIlXsO89_-9-URB0X1vP&_nc_ohc=F5tZ1htc7lgQ7kNvgE_ZPuD&_nc_oc=AdiXr10DteGZ7opX9kizwtrvRtP32d_Z5zgz0QDdjNlQ4w8uEbbTXeTGSJmpSCk5nkE&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGeD5YxDYq3MyFQ6UynLcV3mHWG8pk8GbjoJezGrgjx_w&oe=68003FA8" alt="Module 1">
+                <div>
+                    <a href="#">21 Century Literature 1</a>
+                </div>
+            </li>
+            <li data-topic="21 Century Literature 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483023462_670848888801015_1513613674615806257_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeG2Xg4aqDNlsjvLQDZH8cllJ5408aT1ZhInnjTxpPVmElfRkbfymcN0nikUTpLpF4_tb0o9WiWdJ1u5mdU5llVn&_nc_ohc=jYPSfeT6k1sQ7kNvgGlh8Vk&_nc_oc=AdhixusUFYI4pHRb5fUlYHnfJVXnyzTJk37MPmYOh9lJWRNx2A3j7m1C8JCp6U9nyN0&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wE6ScZdDdoAXVVNq_rat8cUhMTlTOV8aOulCqBix_CYnA&oe=68002415" alt="Module 2">
+                <div>
+                    <a href="#">21 Century Literature 2</a>
+                </div>
+            </li>
+        </ul>   
+        <ul class="topic-list" data-subject="Media and Information Literacy" style="display: none;">
+            <li data-topic="Media and Information Literacy 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484574323_1059278239552344_594204828442883565_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFB8ybYVGf5qgA88j0ZVLzrFLOiwYn-Zj4Us6LBif5mPiwhl68XX56zp8xNR6S--CYITi9U1R_2VyQUe7nq496s&_nc_ohc=yJciAfj_scUQ7kNvgHc_ir9&_nc_oc=AdjcZ1e1zhWz3DvrFGmtZDCyvYaViCSzhQyJ6bg3lAZvWRrYbzhWxw5sQqM8aymJB18&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHD5EdlQAtcWlXZL0uxt9_jWWcvD6GX532AuQc06_AlKQ&oe=68003C21" alt="Module 1">
+                <div>
+                    <a href="#">Media and Information Literacy 1</a>
+                </div>
+            </li>
+            <li data-topic="Media and Information Literacy 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484492299_671029835365543_1579629124284747418_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeH2UeuuKytGYk4UX3YnbkDEBKUwTn8IktgEpTBOfwiS2DaS8k2dVmu5v8xQ-0atC5DlQ8fE8zi3m9CZW4rEpXg-&_nc_ohc=kqA9xkcuI4MQ7kNvgEdXMk7&_nc_oc=AdjYTzc1xES7GemvqBD8QL-r5p26TcP8o19_5T253ovzRhePLuUmbxfc8ICmOoR-4r4qnwNzwOI4TtIFkwmABRzM&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFk5jr6t_femNzUA2S0Mg2oBxmDCSSD-AFKTGfYLmIJmg&oe=68001B86" alt="Module 2">
+                <div>
+                    <a href="#">Media and Information Literacy 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Personal Development" style="display: none;">
+            <li data-topic="Personal Development 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484438945_635525599436091_8888632334078380600_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGJd7FdQqh78pQ2ljjJKuAETtG7iSYE1lhO0buJJgTWWIgoHi1cOflpBuGyornfIKHhre2Ua3-UXJogeExfwqGB&_nc_ohc=tIEx9q3oZO8Q7kNvgHZ3dm6&_nc_oc=Adi1m0CD6y17gxs149uTLgC6K_oMNmdtTSWVljMT0QE5s5j64L3K-esDysp9HkBuugd8yJIfZYoful0CZMGeXpxh&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGiaih6doLFMp2DPfiXPg2KFE1l6nP-qnMA6m2MmD2qPg&oe=6800437B" alt="Module 1">
+                <div>
+                    <a href="#">Personal Development 1</a>
+                </div>
+            </li>
+            <li data-topic="Personal Development 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483314110_1311794246709340_1282446988568019830_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeHdy1MVoYs5kwIStt-e-bPrfHl5MzF87c18eXkzMXztzSkEEst7lEdF10qNAD4Ig_4WN2g56o_YLoVA2gaS2CxG&_nc_ohc=VRRnLNdKNYMQ7kNvgGPdIj6&_nc_oc=AdgDoL5Po1nZrS2lC4HJtmcHknt40j5-nF0wd-lcsJbAInG1sTt_75AhC4tJzeXH-N90zI31sM-SUX6h8PBK8BWx&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGMWqWdc21-HbzkPIk49yt1ocvljxs4o90uHQzR0gGKiA&oe=68002D20" alt="Module 2">
+                <div>
+                    <a href="#">Personal Development 2</a>
+                </div>
+            </li>
+        </ul>  
+        <ul class="topic-list" data-subject="Reading and Writing" style="display: none;">
+            <li data-topic="Reading and Writing 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/481584377_9606049689453579_7688814735058641450_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEAt2LPoyL1GW00NdkOMq1axtgclA8tUcvG2ByUDy1Ry_VtidNGeGJxK8eG0jbppnWHbGgUr-EyyYB_SnOD01e1&_nc_ohc=cyYA4kLiM34Q7kNvgGs6qnI&_nc_oc=AdhsXYKhP9ErNhtXdlBzrkq8qWOmGrInml11DWe95iMB4yEwVH2WDFIoxmAAd-x056vBbzwyMi-9YqXVaevwzPQ0&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGmAr7roRItSFlbONTtR5eZOBUGpJddaHMElJRjg71FCg&oe=6800331D" alt="Module 1">
+                <div>
+                    <a href="#">Reading and Writing 1</a>
+                </div>
+            </li>
+            <li data-topic="Reading and Writing 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/482513522_1064157569090347_4578565990798108474_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeHV7pLYrZw9QzcGe4wxq1LskSCTNYAm8c-RIJM1gCbxz7lYmhqo1MaocoHCHVUfLz-MIUxs5Jzj_BM2v8mhXvWp&_nc_ohc=G2QqdfuwCtsQ7kNvgGUHlre&_nc_oc=Adh-Ztvew7LcjJqUSMEKkaCbJoa_ncTJojBHqqrDPxlNBZLe8CyL2r4WR10ea1Y-Mrb_eX52xtsi7wym15DITaL3&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFJ-F86EUhenGsXDJ7JCrBhg3LPiO0UVswX_IuWiRVFHA&oe=6800324B" alt="Module 2">
+                <div>
+                    <a href="#">Reading and Writing 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik" style="display: none;">
+            <li data-topic="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1">
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/486148117_995313896035960_4979435165518393194_n.png?_nc_cat=108&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGBo845-K10qUMb9ITk9xs684-ghBNoP3jzj6CEE2g_eCSeJVBM322DpwWOKmqzNm2jgFDP5oy_cS14lFB4JIn0&_nc_ohc=nS34uQcb_sIQ7kNvgHZHARb&_nc_oc=AdnCrRNLVcnU5QjNQMA5l5-80DRZryos90SQtM8kTP_3a9-YjPtrn4q_pYQnDriFDp8&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wE98O0FlooJyHQ9c9dZ7s6tciYgEf7uHH1YKJIhmLHqqw&oe=68099EA7" alt="Module 1">
+                <div>
+                    <a href="#">Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1</a>
+                </div>
+            </li>
+            <li data-topic="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2">
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484623238_1002915724592635_319049309929987813_n.png?_nc_cat=104&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeG5DC19RCys4F5MHxal1JE_e7KhybTVyox7sqHJtNXKjJeSkD8jASe8T-0tOJDmoogNxT5fVSYqw5AAUo_xn9_H&_nc_ohc=CpbOlUvD_xkQ7kNvgHqUTUB&_nc_oc=Adm4NuJ2POB9T-RtFqUcComdjhAJLnAX_gV3vRgIOKUtPSyhCLeSXLlTrmjYHQcbh7E&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wFnZ_f4K8evx9a0lstorBpFABVpB1evTYUZi__iH3FA1A&oe=6809B701" alt="Module 2">
+                <div>
+                    <a href="#">Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Statistics and Probability" style="display: none;">
+            <li data-topic="Statistics and Probability 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483275857_1347508246380359_4580143035986993939_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGtAgN2EAQY-Nic0E3ItvzS_0zNes_priP_TM16z-muI5vvjfuZWZCsFF2fFhTLes689EcrovK1Tqf6nBSAIcaZ&_nc_ohc=b74708iqzrYQ7kNvgEwjr4S&_nc_oc=Adh-_q99AZqYSzkreTAh4fbAj76uLO_5Q_8wwzCpQZe3yHwNPIK0bPkSfIDlq8jVLIA&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wF3hBNMi9rakek1BZ8fEJrMfJxpUFcVBCGS4nHHn7a2lA&oe=680033D1" alt="Module 1">
+                <div>
+                    <a href="#">Statistics and Probability 1</a>
+                </div>
+            </li>
+            <li data-topic="Statistics and Probability 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483328667_526093593851270_6978903671106177826_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGuFkChfguoe5kCW4dYdnQx4WEOUEObbUDhYQ5QQ5ttQKJVZohvYpxUA_5qtJqleHsCff150usf_PS5hG5CaOS5&_nc_ohc=6BbvofMoXWUQ7kNvgHdhwkA&_nc_oc=AdgTRgEMZR0CS-aSBgNqrGSi_nc8RIHEyiKuw2V0jPNBbVO158EfmKNgJ6YbnBKjhms&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHx5gEZVAe5MeIS61m2s9vvz14k9UPVBohd3_7vJUwTxw&oe=68003EB8" alt="Module 2">
+                <div>
+                    <a href="#">Statistics and Probability 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Philosophy" style="display: none;">
+            <li data-topic="Philosophy 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483326593_1601311930559410_9046923614709129562_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeHFQIJ7p9WpTecK8BCVMscOzj-dCLVoEsPOP50ItWgSwxv16O78dNbqZii3tVsDN8jRpvIQL0PYDtytwxLeKG5Z&_nc_ohc=ReJzMrl1t_oQ7kNvgEu6-dq&_nc_oc=Adgsx1s-FgG9Yvh05cWYWvDmwFEpgR8PeCBCBIR1Z7xVbJJWUEanogSiU5xA4xnxzlnMwrCgBdViK6g7gnIFKWeJ&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFLwiT45RuBwbEWnqDHud0P_bIoUhNUoNh3Ttzlu0mjfw&oe=68001C91" alt="Module 1">
+                <div>
+                    <a href="#">Philosophy 1</a>
+                </div>
+            </li>
+            <li data-topic="Philosophy 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483676030_1187810073055813_8962669702650258243_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGIxXcHJ62Knq4I-2lhSkwq23nvYkJD7ELbee9iQkPsQuT9yKIYlQvlhTK9Gf26BqumgEpU4cyuogKmGg9Dr64m&_nc_ohc=aHfAM6nqajIQ7kNvgEsZJTm&_nc_oc=AdhuNR7KScHVdo1prAkVALqXAXJxZGJblrtMARjaVEJ0lCRpZX8_p7Q4dCBoQGdKnzOJd-4lQE9Sc2hOgUZWWaDr&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGQHXc6Zl9GRO6v8jZgeBHfZTKHOXrU9Gv5JcFJ0gicyg&oe=68004AA5" alt="Module 2">
+                <div>
+                    <a href="#">Philosophy 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="HOPE" style="display: none;">
+            <li data-topic="HOPE 1">
+                <img src="https://imgv2-2-f.scribdassets.com/img/document/524960050/original/bb88c9b037/1?v=1" alt="Module 1">
+                <div>
+                    <a href="#">HOPE 1</a>
+                </div>
+            </li>
+            <li data-topic="HOPE 2">
+                <img src="https://website-assets.studocu.com/img/document_thumbnails/8deea6d9623d9cf5fcbcd1162b511ebb/thumb_1200_1700.png" alt="Module 2">
+                <div>
+                    <a href="#">HOPE 2</a>
+                </div>
+            </li>
+            <li data-topic="HOPE 3">
+                <img src="https://imgv2-1-f.scribdassets.com/img/document/521763158/original/6af9d4755f/1?v=1" alt="Module 3">
+                <div>
+                    <a href="#">HOPE 3</a>
+                </div>
+            </li>
+            <li data-topic="HOPE 4">
+                <img src="https://imgv2-1-f.scribdassets.com/img/document/600458372/original/1b711f8d08/1?v=1" alt="Module 4">
+                <div>
+                    <a href="#">HOPE 4</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Contemporary Arts in the Philippines" style="display: none;">
+            <li data-topic="Contemporary Arts in the Philippines 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483280753_1178343703679300_3931680230881800593_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGp_ppRbn35HrwpTezE524hkqvYljlwSn6Sq9iWOXBKfo26sdE5n1i3SMHNJZGxsAgZgn1Jka40SwzHkDusOg4p&_nc_ohc=_LMHteAEansQ7kNvgHq3ARM&_nc_oc=AdjyR6tI_YIRjk_7Hu9rJLMe9jIkaqmd1X0O-OuFzos7zvWWRRKdfTlYKRJQLwey7w3CRbERhivgZQn_3fOwG93O&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wG-hf1_OkMDHFKBrH7H_E6poewTd0YRX0viP0HwYuBnvA&oe=68002090" alt="Module 1">
+                <div>
+                    <a href="#">Contemporary Arts in the Philippines 1</a>
+                </div>
+            </li>
+            <li data-topic="Contemporary Arts in the Philippines 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483280753_1178343703679300_3931680230881800593_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGp_ppRbn35HrwpTezE524hkqvYljlwSn6Sq9iWOXBKfo26sdE5n1i3SMHNJZGxsAgZgn1Jka40SwzHkDusOg4p&_nc_ohc=_LMHteAEansQ7kNvgHq3ARM&_nc_oc=AdjyR6tI_YIRjk_7Hu9rJLMe9jIkaqmd1X0O-OuFzos7zvWWRRKdfTlYKRJQLwey7w3CRbERhivgZQn_3fOwG93O&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wG-hf1_OkMDHFKBrH7H_E6poewTd0YRX0viP0HwYuBnvA&oe=68002090" alt="Module 2">
+                <div>
+                    <a href="#">Contemporary Arts in the Philippines 2</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="topic-list" data-subject="Understanding Culture, Society and Politics" style="display: none;">
+            <li data-topic="Understanding Culture, Society and Politics 1">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483367300_659736423184846_7187890988280267726_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeH8nzGgaqLdw10egsy3JgpIFpBJEnD80DQWkEkScPzQNGvPZXYs2TYuIHOvQSO0kgagL7elu53Mc44LP8rg5pvE&_nc_ohc=Nag1NB5NoFgQ7kNvgHUUF0v&_nc_oc=AdhpeSdLVlB2UDZ38_7DeQ2VjaqUuAJrOom504x2pP9yG4C8r6LfffdhBiHFUe1dbHg&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wG1kIwcjdh5n4ex4JkuBf5lgqKlaVEGJ7wNQCkW8jASHw&oe=68003816" alt="Module 1">
+                <div>
+                    <a href="#">Understanding Culture, Society and Politics 1</a>
+                </div>
+            </li>
+            <li data-topic="Understanding Culture, Society and Politics 2">
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483963748_894302109379021_5651340914850689975_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEqO0LZOfov1EV_ktIM_pAM-QcYEqDVDq_5BxgSoNUOr3EvaIxZcCyiAkzShVfGLkN7ZJoICyRUiSoLP1gsHCEv&_nc_ohc=m0Q1qlj-koAQ7kNvgGFJ3sl&_nc_oc=Adi1slW7llDJ7vdcA3x_3vxHRnUIAZ-nyy_nUP03MJGOZhPkxhBOu7emW8ixbsCBWWA&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFjuSp2XRZjXeqGY0Q99rJcJuK80nEdDqS7FVKn3ijkHA&oe=6800212A" alt="Module 2">
+                <div>
+                    <a href="#">Understanding Culture, Society and Politics 2</a>
+                </div>
+            </li>
+        </ul>
+        <!-- Add more topic lists for other subjects as needed -->
+        <h2>Available Modules</h2>
+        <ul class="module-list" data-topic="General Mathematics 1" style="display: none;">
+            <li>
+                <img src="https://imgv2-1-f.scribdassets.com/img/document/476703864/original/ecd512a22d/1?v=1" alt="General Mathematics 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/16LdFTjPgF3EwoM9VU6UNo8QGF0btBiNt/view?usp=sharing"> Functions</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484453141_965342029043945_6955271616752101468_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGT3_AD4BJZAGlbxWq5pYWja6lwr2zUsdZrqXCvbNSx1lZP0xzQFf4gZrm69dMehcSIVyQ89L1MjM7u1CEjUjQ3&_nc_ohc=yp6j7LoiqN0Q7kNvgFnYsw6&_nc_oc=AdhlMu2yTJXx1VgNSC9LhqUKVpKbpsRxJksb0dMiqiK8D3_L_gHOasrO1MPJyYavj04&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wGNH6U-if0p5vzuSZs7Rf9dKXluoiiBDFZcdj5RVL80hg&oe=67FF9C6E" alt="General Mathematics 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1mc8yEpIU79Za2S3DRHEzC2YwYY40JbY0/view?usp=sharing">Evaluating Functions</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483364602_1149683249814994_8656785478315859217_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeErBcFG4vRXkXPeuS2LQI28a-5i0_GYZ5Vr7mLT8ZhnlYCY-tDvJu_Yn5ibb1dN7qd50GTvn-gSvSgajnWzSJG7&_nc_ohc=qnI6D8OR9aYQ7kNvgH-yqn6&_nc_oc=Adhq8kziwHnO_Ak1Wqr69tXKguBDO9ym_SCzeV4YNI_IbihgNt93dFbgCvG-XddT-pY&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wEC__oiPjm5sSVEz6EArhCE0XBceE-bHvwyDI-Y1RBffg&oe=67FF90AE" alt="General Mathematics 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1phbDFP69iuKdDPAWPL5PgcYsAkiVn5yn/view?usp=sharing">Operations on Functions</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484496826_696970055991228_17837144398083601_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeH_f5jlAyS8jUexXp6BsaThg4ygov7wNxuDjKCi_vA3G5rHn4uHbbYTBrwvnG9HBJ-omdf0E4AmboYVfhX6_T1F&_nc_ohc=58Pu1DzkfK0Q7kNvgHd5Vd5&_nc_oc=AdiDoqekRKgS7HBofIIPTWG9vu-pZS0RhtsBN1i3dltnAp39es8_Y6c01hqyzNGPOOI&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wHrxB8s0z8-CvCxQZZDeR8ijWQipgjj2gPjabfdieCmIw&oe=67FF8D5F" alt="General Mathematics 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1RauvSBbP8JXWr-_YVznZElov3yodWhp1/view?usp=sharing"> Solving Real- Life Problems 
+                        Involving Functions</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="General Mathematics 2" style="display: none;">
+            <li>
+                <img src="https://website-assets.studocu.com/img/document_thumbnails/7bb72082cfa486a966f81d3c45469207/thumb_1200_1696.png" alt="Geometry Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1l4ezpLuw4xzH5EZjcIGLLfr2UZ-KsXaZ/view?usp=sharing"> Simple and Compound
+                        Interests</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/482136631_536017186198708_3059150252228774681_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFUU2hhOcK8pnqKs9D2QiLs1-VjtgvuNkbX5WO2C-42RssR6qB7dO3ObUPuQWf9BzzMV7bwQ2QOAqBow-ZskTRu&_nc_ohc=c2qlDDZncVsQ7kNvgFXB8r6&_nc_oc=AdgDDu3G-d8Zh4OsP3Nrn2-TvMPBve0sZYAkEs2AkT2l6mIRmT9LzKEpSIhuiujhR_Y&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wFgu-px49PEXVfllL7V8n5Ox780JATkd9tgPiM94HHtyw&oe=67FF8F8F" alt="Geometry Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ULaz7OdR-oMd-WrdQMFfkVcC9cI0zS6M/view?usp=sharing"> Interest, Maturity, Future,  
+                        and Present Values in Simple 
+                        and Compound Interests </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483311633_686278773821452_8855922070646395922_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeE0UocxF7HdfTKWUcb_xv9Xj0_niZ7VoESPT-eJntWgREQX6XayXyZDP4dXPgOwHnCfghh4xK5eYGdoECOExz2r&_nc_ohc=T_WqjsVfITIQ7kNvgGK5LH6&_nc_oc=AdhTlElzWum32YtSpWkckyLVa_cHahKUro3ZF7BpwXK5oCiskl-MaIGbGf9422500AE&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wE0bx2ZQMeNjLZRUlxNvNnzGAN9SPKvuZBjj-hMOVu2lw&oe=67FF8388" alt="Geometry Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/15Lzm8QjoWfmqkhT9Khxl-vYoeDA0Rkc5/view?usp=sharing">Solving Problems Involving 
+                        Simple and Compound Interest </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/484500702_584582287958360_2212443098965208028_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHsEQLQk1eAT3DHtonXW1pQxicKDVYuqsfGJwoNVi6qx-BS2SkK0IeKAeS7AEhfIZhF5WmWDPgARN1KmFrXKZJx&_nc_ohc=Js0LwdnqS0UQ7kNvgEtaCOD&_nc_oc=Adi-8oeyKPbtMBpsOUG0bTVGQEXlXHFM8arHaHPGdrl6qvz0918V5M_XDmgaFqkBHKo&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wFwrf82RR02cQY7IMYmP_7pQG7O0kBoDHztc4yRCTv2fQ&oe=67FFA54D" alt="Geometry Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/16Xl9f_5sI5rcYp4t0rKX53UspIm_Nj51/view?usp=sharing"> Simple and General Annuities
+                        Interests</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Oral Communication 1" style="display: none;">
+            <li>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQasScAwHNPIn9esjLKOEZLIQZvsbXeWZnT3DrjZxLW2MSNM7yP8GWt2p_HH43GwOsmWvs&usqp=CAU" alt="Oral Communication 1 ">
+                <div>
+                    <a href="https://drive.google.com/file/d/1FRNwDVrOguHXtFmeLzX8ohATNfIj4olz/view?usp=sharing">The Functions, Nature, and 
+                        Process of Communication</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/480030446_677184978074697_4483901957302805726_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeHXL-otxXwYB9FOmvhY_bZsn8D8wroWL5CfwPzCuhYvkI7LBZN6W9IKapqJVR_iHuSMmdmZ3lr4L2KUpwZrnX_j&_nc_ohc=asHgaYfBHuYQ7kNvgGZ57Bf&_nc_oc=AdhHuMQW5yWtYvIfz3QRpxjHWil92VKMW2Y3XkJbgeLROPqImWUbeKTco5_quG2aOrg&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHhHizWrY7WMfacugkd2yLe6uar6JJS81rQI31lLkdI6w&oe=680052E9" alt="Oral Communication 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1k_V0939KRFOF8l6zQZHDOk73EKzdrZ_Z/view?usp=sharing">The Various Models of 
+                        Communication</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://imgv2-2-f.scribdassets.com/img/document/485350274/original/6f09fc9365/1?v=1" alt="Oral Communication 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1qz81g2fAfXOQETsl56QESf_GT4drRvnb/view?usp=sharing">Using Various Strategies in 
+                        Order to Avoid Communication 
+                        Breakdown</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://imgv2-2-f.scribdassets.com/img/document/488539264/original/ddf0c6a289/1?v=1" alt="Oral Communication 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1g2XkcS0PnD94KyMC7liqJsBfkNlPzTvS/view?usp=sharing">Examining Sample Oral 
+                        Communication Activities</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Earth And Life Science 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483325056_1151166920071077_7888995625047089047_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFCQ1YJ9QuZpiwRg2gn9e5OF6ArSJLZcQgXoCtIktlxCLXxp92qSKvI1XV2zuYD2wN-boVClu2SPklcO3RK7aNh&_nc_ohc=YVKh-Hd-4LMQ7kNvgFB643y&_nc_oc=Adg_jqg6vGBnrtWfNY0JvN64sa7OBaUnlVIhDDdbJRBqmpQL01O8ekDq4nwOF5xd1wo&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wFONSTYh7YvXgGMO1mJd3kAm3-M7W6rHMqOtobQeYEOyQ&oe=67FF7BF8" alt="Earth And Life Science 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1e1kyQl3K72dHIvI4a35vPOzptnkQFQ8J/view?usp=sharing">Origin and Structure of the 
+                        Earth (Planet Earth)</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483325056_1151166920071077_7888995625047089047_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFCQ1YJ9QuZpiwRg2gn9e5OF6ArSJLZcQgXoCtIktlxCLXxp92qSKvI1XV2zuYD2wN-boVClu2SPklcO3RK7aNh&_nc_ohc=YVKh-Hd-4LMQ7kNvgFB643y&_nc_oc=Adg_jqg6vGBnrtWfNY0JvN64sa7OBaUnlVIhDDdbJRBqmpQL01O8ekDq4nwOF5xd1wo&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wFONSTYh7YvXgGMO1mJd3kAm3-M7W6rHMqOtobQeYEOyQ&oe=67FF7BF8" alt="Earth And Life Science 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1pHMY6SzmBQSoWNuwbJu2So_RcPzfOt3L/view?usp=sharing">Origin and Structure of the 
+                        Earth (The Subsystem) 2</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/481865753_2859521517562304_1212799119773935508_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEQN_xPq1PonA1Ic9ezZvgZyL9Nb3YH8dXIv01vdgfx1bYHKNPoLQCIP1nGkawMBzwqDr2Xd7Xnaf-vLDKWCi3O&_nc_ohc=EEeN1JeMovMQ7kNvgHoBTUh&_nc_oc=Adi9qtUJX6gSSwy4i3Zpn1CZOk6ZNd7ncExBt79dn9w3JjgauLEPzvINmbYeFC6DSco&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wEAmOqbmGuLeRxRAk-Ry6NJQkGSsX1HI8pJm0vHAS9ZJA&oe=67FF85D0" alt="Earth And Life Science 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1UukB4Gf6p43R9ZEAU45tpB6E0wPIxo1U/view?usp=sharing">Minerals</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484131640_9251427838259149_7402410545637923688_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGz-yMiu2Ul02tRheAEdGpBlUoh6IMhdo6VSiHogyF2jkEG3igddNqwUKwndZbfEEROUsgFwE4DNkksq6wN59xn&_nc_ohc=zIbihSoPrSkQ7kNvgGgjiAI&_nc_oc=AdgoGjdSssTdmjyecVppz7DQhpT0vH4t102DK96-NSZ9Cpc5hAuyTOEa2ZetL_uKe0c&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wFWD_kPEvw4xFU_NbSxXFqhPOTyCatzTS-OKsKEPcEEUA&oe=67FF99DB" alt="Earth And Life Science 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Ivija584_VH4eid0LrYXHiZHt4palf0P/view?usp=sharing">Rocks</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Earth And Life Science 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/482977826_445057011963740_3122213658006635436_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeESXgoYNyxNcON_KP2QGPz_F8ApEcHIOs0XwCkRwcg6zX59cerQeZFOOe9qTQsILpzu3Hx0jbDDDpPFLkMrChYO&_nc_ohc=tvP3ZW6zo-IQ7kNvgGB5CK2&_nc_oc=AdgTX1Jb2vMl-e5txM9thuDLWHGZp4y0LwBsnB3ueB4hmLCNXCbhs2my7k7JQlbdFp8&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wH8UMETIOXfOIatZoy0ONOtPL6dE8sRN7tCPUeGjthn9Q&oe=67FFA800" alt="Earth And Life Science 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1SZxDERmDYgGloFnIZHnx2kYHRor_jv44/view?usp=sharing">Evolving Concept of Life Based 
+                        on Emerging Pieces of Evidence</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483353008_630289033227883_608128528778821333_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGgWIMbsDRVW6X-NhN7mmoLZOrA8NJtritk6sDw0m2uK2Bg_2tZeR0yNKfMWsDPvt3dnNGqxAtmqCIL_KTHirGp&_nc_ohc=MW7UzwaizGEQ7kNvgFTkj5c&_nc_oc=AdgoLdbe7HyfYuOqg3jHViVJkvvH-ehAedqP_4PZKmUeW3tuscCDAOi0ryoQ1ioMzsc&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wGUYaH6eSAetQXprvu-JAYiW67o5AWVUsMKsCjjulDq_A&oe=67FF9B6E" alt="Earth And Life Science 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/19r2MMAEEKA5QKiGpG8CjxuoVPZxwHJ5u/view?usp=sharing">Unifying Themes in the Study 
+                        of Life</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/485002527_665808715914129_3814771949583198969_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeH6GKOHP-pdgAo7TEH9tc-V1xSvPzdv8F7XFK8_N2_wXlTm6FhvGnCCdCZnAGLtv94QqJBdShOyXHcvJW3XTm73&_nc_ohc=8lEoUDf_KX8Q7kNvgFPHBxq&_nc_oc=AdglW0Pnqr0qrJLFjSTUC3TTIJAvGfFUGEP8--gESVooRs1GGZweOtlR5qQylBPL3Oc&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wFMO5y_YieBpC7Ogswbq4ew4bFcPnMV7PvPyQwuzaX4Hw&oe=67FF8F78" alt="Earth And Life Science 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Jmt9QUWjaUyniXA0nenzBuV3fBVV0Gye/view?usp=sharing">Perpetuation of Life</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/483263235_9483257888389509_3188990566295062891_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFMu0SujlVP4A9bWapcQtaYH4WzLs2DXtwfhbMuzYNe3P0u9jktSCezymw45xFjaeLk_kx7ssuEIo-Suck2QG59&_nc_ohc=lyy8pm97H0wQ7kNvgE1AzIh&_nc_oc=AdiVpDXTia-4rrUm5JSVNc4fk__O5QO6fSyS-De-GpkptyvD5kxRISl97YN3L5b2RQA&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wGuEPoenerwRLXSm9IKCuvEO-GezuJ3e8eiN42ZsN_q3w&oe=67FFA8F5" alt="Earth And Life Science 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ENpK68iDL6U58RWhIl5XcdajfO9zCY9L/view?usp=sharing">Genetic Engineering </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="21 Century Literature 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483371529_1020983896547953_825904111586219060_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGTRp38uk4alTBI-rfzxg6qPSzX-3tSroQ9LNf7e1KuhN4QwmAd6G26IAIFq0ivXIP5QIlXsO89_-9-URB0X1vP&_nc_ohc=F5tZ1htc7lgQ7kNvgE27OVy&_nc_oc=AdhBXGAjan4yiZ22GPOH7KQFkEdtHNX3wBZUebnjiBoeL_oo4Uhvd4JflcbGc3gAs6w&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHtq6VE4K4F5r1nLxvkoNMY9g6enJAw8CnYwWixZHdIAw&oe=67FF96E8" alt="Earth and Life Science 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1NMMYI-w2G_1G8ELv2Sdte3r19l7mlVjv/view?usp=sharing">Introduction to Philippine Literature</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483966875_560757396336850_6739586338962080542_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEk2zUcdsjfEM_2s0wfjPkfVQoz5qcYs9RVCjPmpxiz1DE7tkEeKWgrD_kiOpjPW15LafHJasjYF2MAyLER3wRO&_nc_ohc=-aV0JlW9P-YQ7kNvgE8K5GT&_nc_oc=Adh_OTWMCUg1X_Ygj8oe4lDCcrIiZfywSSEfrfurAoFcBIRIJVln-FkTl_duB2GqvGw&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wE6_O-wWEp2RhJYM_SRm-OotjduYpOarDICfRlcImcgHA&oe=67FF7D93" alt="21 Century Literature 1 Module 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ISope16s2F5Gi1rHAODA4vJGH2vrK5Fw/view?usp=sharing">Conventional and 21st Century 
+                        Genres</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484326293_1637937126829324_5662893475917778147_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHtbLgieABI06zlthpi2OJQhuJ81g3UOguG4nzWDdQ6C1LtCgAuRtHx3FNul8n60NeFpssL3ZdF7RxETgjOxtUo&_nc_ohc=dRPFFeFk61IQ7kNvgFwhB7b&_nc_oc=AdhVi77akodPo3vlxhagaGxNU0xGcO-MjljcEBwHoTcyDa-SniqTMcx4xJERd8QhO1g&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHmUyWIzddvh0styGCuwvES9iDGh26AjiU4sqMXspGB6g&oe=67FFB148" alt="21 Century Literature 1 Module 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Sk7eqJS4xItVMutsgVYIVkOBh5Vh_VxQ/view?usp=sharing">Historical Overview of Philippine 
+                        Literature: Colonial Period</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/482532368_1330640781491226_5225948754984017609_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeF-neN0LSdoht3J3jybu1m-p687II2wWPOnrzsgjbBY82KU3bdpfxp8JxeVplSQQ2GF7lpL7WrAHHDCovmWHb1R&_nc_ohc=TABaNBHBK1QQ7kNvgFk97BP&_nc_oc=AdiBKY1XJMRfEUsVq8jMEXd1IDJhMfeHYt2Op6aId9Z2iGZwM58zhEovXf6pMN8DOSc&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wHIRHs_xf_SI5QOIDO4ePEU_Pcv_dQFtrNi43uHSY0AIg&oe=67FF8B82" alt="21 Century Literature 1 Module 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1udnDAcHQxehIxRKQOu2PoW4MP2N_xtra/view?usp=sharing">Historical Overview of Philippine 
+                        Literature: Post-colonial Period</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="21 Century Literature 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483023462_670848888801015_1513613674615806257_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG2Xg4aqDNlsjvLQDZH8cllJ5408aT1ZhInnjTxpPVmElfRkbfymcN0nikUTpLpF4_tb0o9WiWdJ1u5mdU5llVn&_nc_ohc=jYPSfeT6k1sQ7kNvgF4nJ8g&_nc_oc=Adi65td3UPuahol3YrluPm8jF07t-wkLUpZakl1cJsrNgwqQ-2eSIWEnbriFedws524&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wFhIUqN3MADOHPA2SLnxK7TIbHt1IevcFoZVlU1L0-Ekg&oe=67FFB395" alt="21 Century Literature 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ZwQrjRdsg4vXCrwtbCOmdlYHDOjKOldZ/view?usp=sharing">Writing a Close Analysis and Critical 
+                        Interpretation of Literary Texts 
+                        Applying a Reading Approach</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/482138327_1385694559106081_6316739163830903998_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeE0wLMprCw0jLJ7CamQwC6BchiKwkgpGldyGIrCSCkaV_u-mspo6gyU67ct2PFsEY2I2IhXDEIuPYKPqgeoWI9Z&_nc_ohc=eEjpj1wm84cQ7kNvgGrPKRq&_nc_oc=Adi5jhYLl3Ue_0P6fD0FLVIrgw8OcTzR-onuJMUnRgBpfoAGpR8EQPuQRCHim6tXd7Y&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wEH0BsYqC2r-NhKWo5zqhSwYCO-UfHm3Mhbzi65cDMl_A&oe=67FF838B" alt="21 Century Literature 2 Module 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1kY_sExJxLb8Y5w9FpPgLEw5zM9N9RHkf/view?usp=sharing">Differentiating 21st Century 
+                        Literary Genres</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483314110_1452124839555512_2581044038276851238_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG7EH4djrbI4I0C9bkQBakH7XyQkP--Ny7tfJCQ_743Logj8itaXR109V_KUF8UjJHaGqEKgCw8nbEp6Te68TE3&_nc_ohc=1kBGYdr374gQ7kNvgEEkAvB&_nc_oc=AdjV7t-9i7Dw7SgNyRet5Tl2nNugxwhW2rVKy4EWX73VV28O0RkncKVAluNDmSx7ZaA&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wFLepGWnuGmhyHPG6hLwoYwUxf1mudnf8l3R8Z1zn8G7A&oe=67FFA2FF" alt="21 Century Literature 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YnLjFBe7FrJOMj-WoK7zDQJdDd6mvCi-/view?usp=sharing">Creative Literary Adaptations</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/483367300_976701421107342_3775592449368473491_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHQW2yRm317O-p9qBnkC4T4BfpH3lCAaF4F-kfeUIBoXukQ3rmbvdMpYqnpo_mULwCtR7bl38WZExickquCwRNv&_nc_ohc=9hisQl7dWMcQ7kNvgHBVR1A&_nc_oc=Adhrgl3YBS2DCNpg32EP3OMBFh8yMxlUMsLd_5LNYK7TuRiLtW1yiYiFQwQi7jk3KMM&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wE5qGXqg4KNebRtx0sKBs0_gWfB-_1Cq6jeualliLQEdQ&oe=67FFB47C" alt="21 Century Literature 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YnLjFBe7FrJOMj-WoK7zDQJdDd6mvCi-/view?usp=sharing">Self and Peer Assessment  
+                        of a Literary Text’s Creative Adaptation </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Media and Information Literacy 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/484574323_1059278239552344_594204828442883565_n.jpg?stp=dst-jpg_p480x480_tt6&_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFB8ybYVGf5qgA88j0ZVLzrFLOiwYn-Zj4Us6LBif5mPiwhl68XX56zp8xNR6S--CYITi9U1R_2VyQUe7nq496s&_nc_ohc=yJciAfj_scUQ7kNvgGzhIMH&_nc_oc=AdiaRUjbT0DgcKpxrULAGEvUIMJvr0p988fmyC5XhP3qvaE2M1olMSa6Vc20EaLltySwbFEU_GCknaRfCQE8EU-c&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wF22Q1PE2Zp8FELUj_Cpl0k5QdzgFvw1WN9yKuV_ayB3A&oe=67FF9361" alt="Media and Information Literacy 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1b1BarjDSeDJgbEPB1GN4XzxwVtzFw7yd/view?usp=sharing">The Influence of Media and 
+                        Information to 
+                        Communication 
+                        </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/483336354_629997846484900_1669175163387903795_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGv4zpxkHt6CAKCmO9WIPalm-Nh4OQs7rib42Hg5CzuuPOoWWBbv3siGM3LYV-StnzQMzRjhE7mHlGqH-5phOE6&_nc_ohc=ShNUo3xotGoQ7kNvgHRUViC&_nc_oc=Adlh5MFvC-r2-AYwBjl12hObXO1ADaSKjWbTam1Lqs68CmrOObD0ppBupZu7qlhy0yo&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wGhtk3nv-YNrvyzGiJZ5QO3PhOsyrxje7Ffu-K5jgiRDA&oe=68089B03" alt="Media and Information Literacy 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1PoRRGa7KGpXH2lJo41z2jeGzBum91kGt/view?usp=sharing">Introduction to Media and 
+                        Information Literacy</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/485024230_624383407053526_7911341322285745565_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeF23EvMYbmP4aM8gwsBjffoTMgWmGyBp8NMyBaYbIGnwzUwjL4x7WqI1AT0KkpbdjZDIu3-L6QCqq1hDH76LbnG&_nc_ohc=yr2gTW234DIQ7kNvgHi_-Aj&_nc_oc=AdmGzJEYP3pWjiriNr8oqbBequ_I-oO05kjZMkXPxxxl7jTeGiWoaKwcBZuRdcWxJzw&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wHjwNzvfGZSaNcfMihgKfO1PTErZqNmbpCGFufVJ_ZOmw&oe=6808B46B" alt="Media and Information Literacy 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1CS8Z5nNnPYixj3cJI5tNTKoIGeBOCulu/view?usp=sharing">Evolution of Media</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/483002446_1428881408080310_4762385556016118860_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGoH3XYzffSZapaBNGa0aEzRtRSrU1S_elG1FKtTVL96XyhMc5eVbNmZQLbXL-wxzH8JPNZVYUzUZ3eV_oobt2a&_nc_ohc=uZrLaSAxriMQ7kNvgGDiMK4&_nc_oc=Adn6zrSimGkllCoyUw-cdXQqGCrrOXrF2j9155IM_gMYZ_Y5asgQv7SbnBSLmbcdjrI&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wGyV5NP274NPMCr0X0dmMCsp6zHSC3ud2vca91KvFQV8Q&oe=6808C440" alt="Media and Information Literacy 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1xPhh-Gfuyo3voWsbKxzOVFIm0biqS91R/view?usp=sharing">Types of Media</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Media and Information Literacy 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484492299_671029835365543_1579629124284747418_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeH2UeuuKytGYk4UX3YnbkDEBKUwTn8IktgEpTBOfwiS2DaS8k2dVmu5v8xQ-0atC5DlQ8fE8zi3m9CZW4rEpXg-&_nc_ohc=s1dFvnTtb_oQ7kNvgFMv7Yv&_nc_oc=AditSO9ZyMrfLYgpvdAYsRkViNfBexZerH_ZsMR-uk_m2QZ0s-o5Rlt_-tTPjCIGb8Y&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wEzHn_MoSvwzbBfmzcMDuAre6jK8cIasAEYsXTLnbgRQQ&oe=67FFAB06" alt="Media and Information Literacy 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Sfx4xHvqbBTHQMX9HSxfLcOzaGtUnzDa/view?usp=sharing">Opportunities, Challenges and Threats in Media and Information</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483756984_1358046812197448_5462314853835290871_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGPIw2zFViKbIlUnZfa35cnk15824oKcTqTXnzbigpxOrNcSXYgti1oN_GpiO1tQZa2BvPGCC5H8o8sc809eX-7&_nc_ohc=R7Ajlkxj0q0Q7kNvgGDzvyT&_nc_oc=AdgN7nKWmczMCoSXXVkC55tTxrKR8IlOdyPTcG2t0nhKAQj66SLGt4Hr9XeeXu4Az4o&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wH4uKSFq7M1USunf_B-bX9TGi-BPlSKnskwgNV7oxyWag&oe=67FFB130" alt="Media and Information Literacy 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/12zKw5x0mc-HtuKatLCcLGTXL26wCbgMp/view?usp=sharing">Massive Open Online Course</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-4.fna.fbcdn.net/v/t1.15752-9/484584805_2090512378068158_2295618605673407194_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEyLe4JqNX38yrJkPGBaw8vg_ejx7uP2deD96PHu4_Z14V3RdoyPfAsIJriP5uteSHlKOP0p-XHwY553JPfprwM&_nc_ohc=aMdmXvPdKqMQ7kNvgEgP6Px&_nc_oc=AdirGm_mSajWEyfMR79qIyWqDgCnrHl0e5P3Tlp0PQzKbh6Vk-fBoi85aqhDD47Y6Hk&_nc_zt=23&_nc_ht=scontent.fceb1-4.fna&oh=03_Q7cD1wGtnVf4u_VZbKt2TvpWNuLDTj_ltzBA0TLcVkCG8m2TIA&oe=67FFB78A" alt="Media and Information Literacy 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/16BUUrlSbR5SaK9s4FCwiXEVovsDIW7LC/view?usp=sharing">Media and Information  
+                        Literate Individual</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-4.fna.fbcdn.net/v/t1.15752-9/479986848_1189874879205894_1602898387580444743_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG0g7cU0kwlCnH1Cs1Oco4Ww8XR8Hxj-RbDxdHwfGP5FqLtdP24jqqX-Oy-_jKUwr6PtSsK6LJhAR8hdr0qlgqZ&_nc_ohc=dG7lq4YGU68Q7kNvgHqJlFw&_nc_oc=AdjOpy84xrcQhRsaQGTeIs8iP16YWApvdlHpQ_KqBU3qLPjMeGIfjk-eqXXhPn2t9jM&_nc_zt=23&_nc_ht=scontent.fceb1-4.fna&oh=03_Q7cD1wFQ698HsiavGDOmZ6ytyoaP-EibLEBe76G002X3fJnTsQ&oe=67FFB423 " alt="Media and Information Literacy 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1tW1rP_KAjg78JAPeejBL4Ow8R4aR5Yr7/view?usp=sharing">Text Information and Media</a>
+                        Literate Individual</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Personal Development 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484438945_635525599436091_8888632334078380600_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGJd7FdQqh78pQ2ljjJKuAETtG7iSYE1lhO0buJJgTWWIgoHi1cOflpBuGyornfIKHhre2Ua3-UXJogeExfwqGB&_nc_ohc=tIEx9q3oZO8Q7kNvgE3lpoZ&_nc_oc=Adi7Mm8CKjRa7GPo6jw3O6u_2IZrF2D3HLiAqhaBXrI3BFyApr2nhAYgtlpMi8J09zc&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wEbji3JutDRpwkml0Ep1MiudMBXurk_PTHeMRMACsn5Og&oe=67FF9ABB" alt="Personal Devlopment 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1QidQuVwS7S5Bvs-rlHe6ETyn9hBImUqS/view?usp=sharing">Quarter 1 – Module 1 
+                        Knowing and Understanding Oneself 
+                        during Middle and Late Adolescence</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/480739808_2011457589378442_3403843208723031684_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFYG5o-_vsxQh6pfnTvQP_RfhqtQI23oSt-Gq1AjbehK6u_4aflDVDBpy8mLpLScvvKhS891XbTV5JGD95EDf0s&_nc_ohc=lS4ln5D9__gQ7kNvgGnHOkt&_nc_oc=AdikyADdOxoYmC4nj9erz5CqxaeI1Mr75xSNKZzSV6_KE8BtUQZbVo7FRXLm0VxjtqY&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wGG7D2RwE77Aan2URBNrqZnN5jyV-0nT6hY5vml4RIq8Q&oe=67FF83E3" alt="Personal Devlopment 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1BQXr3lMfNrSOOJNbv2GW4kl4e_IJgni7/view?usp=sharing">Quarter 1 – Module 2 
+                        Developing the Whole Person </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/484333529_1598245564160094_6204516627239320371_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGsM1H8l66nLQoqLT2zi_i3OxKUQ0hRfGY7EpRDSFF8ZizbTQJFsU5ahjCllpuv1vcdJOW7K2tP8TduuilcXqyw&_nc_ohc=Qfierv59BO0Q7kNvgGMPtZL&_nc_oc=AdiTR6ruAS454Xhy4LuCrXucHEwhbUjsDzVHb4CO1UHu7eg5hbg8N4JTajstx828Y4E&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wGKjImaLhJP3aTRd5exAf7jSsz68CvxRoD0m42rYeHk8w&oe=67FF954F" alt="Personal Devlopment 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/13BJ9o-WAf1FzRprQkclQvarcfjrS0jej/view?usp=sharing">Quarter 1 – Module 3 
+                        Developmental Stages in Middle and 
+                        Late Adolescence</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483668648_1167056088128253_7895334253320899522_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEnGR7ovc0MGXp7UzIAse23nQh9mE01auidCH2YTTVq6AXzsLBFaDLoFvhkfx9feghZcXAL4iB-7owRV5bTNhnb&_nc_ohc=FiXrLcBe9AQQ7kNvgEPIepy&_nc_oc=Adh741QOma8tSHoQlF61hzTpYvUAjV1APqAb_JwTs3R-iGBvmGa1v5NBIbt8SvTwifw&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wHrJJlz-F1hPI5IfM6lVOEbMs-7M7tGlQP_f8QbdvJAmw&oe=67FF8799" alt="Personal Devlopment 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1iytuw7weK00oYM386kEdQ5pcWkTr2J5n/view?usp=sharing">Quarter 1 – Module 4 
+                        ADULTING 101: How to Deal with 
+                        Adulting</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Personal Development 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-4.fna.fbcdn.net/v/t1.15752-9/483314110_1311794246709340_1282446988568019830_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHdy1MVoYs5kwIStt-e-bPrfHl5MzF87c18eXkzMXztzSkEEst7lEdF10qNAD4Ig_4WN2g56o_YLoVA2gaS2CxG&_nc_ohc=VRRnLNdKNYMQ7kNvgEDy7_8&_nc_oc=AdjXmXl1Ui5Rr0_ElsKnTSKD-ccLbPJWtA9ergzwGcxYIySWP8HnE5NyhmUgKNo11NE&_nc_zt=23&_nc_ht=scontent.fceb1-4.fna&oh=03_Q7cD1wHGWzfvMyePbxRyJbm1kdjw4ncOEf9Gk25gbEjfThpQcw&oe=67FF8460" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/14mXUOpwusJOEXM5GqbvnpA3MXk6JocTI/view?usp=sharing">Quarter 2 – Module 1: 
+                        Personal Relationships</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483255278_3953400638244085_8466659148674585653_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHe3jRsxCJI2Z9WHyGVskyWE7cLFqDFOzQTtwsWoMU7NARThpHVCn9zfqYRNKP3BqcDT35zbzK3FjSFuGoF7-i1&_nc_ohc=7OdYbILx4vAQ7kNvgGoYJHf&_nc_oc=AdhlYDTn-dYvERAc2z7nV6ucuFazz8yZWXCFCTTxvs4WPjQI8jhI_hgN8ruViUpLZEI&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wFVp2beTifUcgqRA1KbCBQ8KYFOaqnhJP1J4lW77rj32w&oe=67FF76AA" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1nvCCojFX2afzM0OOK0lZwmRLSZAW20cN/view?usp=sharing">Quarter 2 – Module 2:  
+                        Identifying Ways to  
+                        Become Responsible in a Relationship 
+                        </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483671750_636814202291352_3508968795671024369_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHd1oV9Pm3_eYrRp90p_aLOYSCP-lQng9FhII_6VCeD0YO8LrTwP2KGXI1rDQwxj5tDbXPoKVga5gtc-X5GgiZc&_nc_ohc=Ryx8q8Nn9YYQ7kNvgFDijhW&_nc_oc=AdguyTAYGTW1X7337DWPV0VogdSmltcd7TKVbTpMMbJybjYmjRx57OgdLf3Uv4YAzNk&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wF5f9sZAnSjxV9idqkNvLNlHT5q9IeFd8LrRFWYjka00A&oe=67FF70C4" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1w2MNm7cr_M64FDrBrCtD1V4cy3qjmevO/view?usp=sharing">Quarter 2 – Module 3: 
+                        Social Relationship in  
+                        Middle and Late Adolescence</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483674269_1880418495829619_5744265222138446681_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGY-CCUzGvSYHzVsSC3705xEJXU3HWviewQldTcda-J7OytLwlNg4t8VYNrlVGQMFG6rpUoOaTTeLXK85szxUuv&_nc_ohc=ChIVZMeQeKQQ7kNvgEw4i36&_nc_oc=AdiKT4VkjSrnoH__e7AfkmP7Dj5PzcugYotesOldrybkzsUqzWclqy4umdicBjT0w2w&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wHtdiT-e154QgxcaYXi9ROY99T1L6ixWGQmTpzKTHamrQ&oe=67FF917A" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1tSmmw9eglFze8lXMU8JFmZv1Q_rnuu5g/view?usp=sharing">Quarter 2 – Module 4:  
+                        Family Structure and Legacies </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Reading and Writing 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/481584377_9606049689453579_7688814735058641450_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEAt2LPoyL1GW00NdkOMq1axtgclA8tUcvG2ByUDy1Ry_VtidNGeGJxK8eG0jbppnWHbGgUr-EyyYB_SnOD01e1&_nc_ohc=cyYA4kLiM34Q7kNvgGKenLl&_nc_oc=Adi7LDtX4ex2NYZMo37CmmhQbP7FUkrhq8gguB8s4MYeJFo71K25l3YmYnluNwNCGYY&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wFRvp2YkhjRrbm_x8xzIceKObaDGk2HXFgkUay5rSSFhQ&oe=67FF8A5D" alt="Reading and Writing 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1z0NcmCFrToQgftSeVNlyd7tu_mjCgqj3/view?usp=sharing">Patterns of Development</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483970982_669477912230245_2747641264704830404_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGXt-zl-BE7_wPColdS3o1x1-WlFOMxy6vX5aUU4zHLqwqeVYxtgHUn7o2e0X825QU4XFtTB0UVoTzt0KTY7xvY&_nc_ohc=6PPNQdYsWCIQ7kNvgFFRFsn&_nc_oc=Adj83no8udQtixGx9ZN19o0oXAofyu8aufRIRJyzlsG89Syqm_FtbhTICWTKHRk1hsQ&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wEIJ21_LXrCGHLUL-SMR7RwFr_0EqL2VvByAr-OguQLMg&oe=67FFA144" alt="Reading and Writing 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ncFg5pW4rkiLznsT4y6SFKUXHsxGuNdx/view?usp=sharing">Properties of a Well-Written Text</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-4.fna.fbcdn.net/v/t1.15752-9/483314677_1172120800509157_1125572572378878725_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeE87syCYcVLW9zm9QqCk0Bw8tZFIExTNL7y1kUgTFM0vqTShl7HQ1cfs5R6FuLXRRsvKtkq4-fkIqoPRQ4ysTG_&_nc_ohc=smK9pbqTMjwQ7kNvgE7-NOX&_nc_oc=Adjvr1Hi3Gy3k1KIwHjesuyXTEtAfXxkrtY18MaF0BGWyXCFKmE-kqP11CGRo0Guljc&_nc_zt=23&_nc_ht=scontent.fceb1-4.fna&oh=03_Q7cD1wFbHxmWc7B4euEpJMOPa6P1UbThKLAXMTK5TMP83m3Qww&oe=67FF7862" alt="Reading and Writing 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1_sn6m-kRwqSfCDz0l0mb64hhMGrd7yNh/view?usp=sharing">Identify Claims of Fact, Policy and Value</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484862091_461403947055319_5777898366001092990_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEaSN_tK39p45pPivXd6nHzJJHrB0gzIAckkesHSDMgB3GBSqaqJ0_CmPVmG1hlFK2hUN2a2HY2jY_aIQYlSFj1&_nc_ohc=PUUkf4ULnAoQ7kNvgF4CL5V&_nc_oc=Adic3w6LNgXRyg9XD9wL5e77LCw6x2CYxMy4T1xJzC9oe6-7DS2-oRuiXv8tP258o8k&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wHw6eMuvie276lGO05G0JFA3pf1iJHLF0n2I1fwGyMBDA&oe=67FF991E" alt="Reading and Writing 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1WHmuTuwpSOIzct09xVCV8ZAOCuzmeQSD/view?usp=sharing">(Hypertext and Intertext)</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Reading and Writing 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/482513522_1064157569090347_4578565990798108474_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHV7pLYrZw9QzcGe4wxq1LskSCTNYAm8c-RIJM1gCbxz7lYmhqo1MaocoHCHVUfLz-MIUxs5Jzj_BM2v8mhXvWp&_nc_ohc=G2QqdfuwCtsQ7kNvgHhWb0H&_nc_oc=AdgLn7ik9MbrD16RURzgbzNCIRM248X0wakt3lqR-t5ZXr877ZyWbBKpesJfeoH0c-A&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wGlsC-xQ3bcudYOSr3fLRuVxQv5AMuHWcBpDU9fDTiJjQ&oe=67FF898B" alt="Reading and Writing 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YTIuHryrgsKO-VRkgHmAsFYOlD4A5f3L/view?usp=sharing">Identify the Unique Features of and Requirements 
+                        in Composing a Research Report</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483314677_651583567356407_7400286326022177254_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFUM7foxJ40olG8A5QA43_pk96x4Nek-ReT3rHg16T5Fx9MaxjWYUgHxNuKlFnnozV2YKrLxzjObgLWAlH4drVS&_nc_ohc=a-TYNWptvQQQ7kNvgE0I7PX&_nc_oc=AdicRxnBQMfEp3jix3FHoTdSoKE16SfDf6G-VlzA_3S7JClIixjK_H8dVPNn11kH8jM&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHoJxXbQICcKRiaDkT4tTeDB2K8sUABV1YqhK7G8zGArg&oe=67FF7B09" alt="Reading and Writing 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/15V_VxuETrt8lAPyA-9ShPykPWyFXNysZ/view?usp=sharing"> Project Proposal</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/483865092_953295653682452_3757691488851020298_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeF7V6XPtnxKcoW69jML_yfyahS1KQleAcVqFLUpCV4BxePl0et9QDQNAG-UPBm9H99Y4kkLy8p_zCjNI6PJz5JG&_nc_ohc=wdm9SN45w2UQ7kNvgHGERQR&_nc_oc=AdiqtASYP5XAzRc1wcQGJHNTnKPemIJHtfQLGGWnG18vLYg50zfGlaA3WDcZffno0OI&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wGz5Kcv1bXCBm1yvc5sLd6h7SkisTcpyW4-Q3hz9ag75w&oe=67FF8C3E" alt="Reading and Writing 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1BN6ArgdljDWBqpr7dPD4QpLyruY16YoS/view?usp=sharing">Writing a Position Paper</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/484349267_1151159299632957_340104560046335280_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeH_2815FiBa9lkPFaVtvs41piMAad0Fv3imIwBp3QW_eNAgCAQJcZYmiv3DO907L7EE0sENz5dc5qixP_uNEXpt&_nc_ohc=sSO8RfMv0HUQ7kNvgEhslq8&_nc_oc=Adg6gCJNVZPnqPi467U2pWJjgjFat_78bONBW9lN_Jtk9J0irggWQM-R3uKBW5jsi6A&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wEweLrb77G5dIqqnbTl3fkTKRca45AwKfx2-BDUFZkTJg&oe=67FFA4B3" alt="Reading and Writing 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ClWJa7NUDMNi448eDNu93HApCUfORvN4/view?usp=sharing">Writing a Resume</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1" style="display: none;">
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/486148117_995313896035960_4979435165518393194_n.png?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGBo845-K10qUMb9ITk9xs684-ghBNoP3jzj6CEE2g_eCSeJVBM322DpwWOKmqzNm2jgFDP5oy_cS14lFB4JIn0&_nc_ohc=nS34uQcb_sIQ7kNvgHZHARb&_nc_oc=AdnCrRNLVcnU5QjNQMA5l5-80DRZryos90SQtM8kTP_3a9-YjPtrn4q_pYQnDriFDp8&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wEasl2pqR8C_yG-7VBpqzL_27zjJyL2kxNB1IxcalPGhQ&oe=68099EA7" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1 Module 2">
+                 <div>
+                     <a href="https://drive.google.com/file/d/1KSlrMpmYUv5L8zqYxH4uOyXp_SUV_H-W/view?usp=sharing">Pagkilala sa Iba’t ibang 
+                        Uri ng Teksto</a>
+               </div>
+           </li>
+        </li>
+        <li>
+            <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/486022367_9241154289286743_6685542992691584218_n.png?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG6ptdFW_BMrmQa0SBpQSo_XfB5ne56365d8Hmd7nrfrv0SopvpicJAS1KQNEy-mWldphWo6mxrQxFNrIFFkpGe&_nc_ohc=EQqhIGYqzhYQ7kNvgFLIaN7&_nc_oc=AdlQoFO3jgD4-AZeeZCLtC2HH1wLb4GLAm8tbrM8hODVksJjvmiad_f7Q_pLgpyddzg&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wGBlXGHdrEd0uNFnrieU7HKNxywpY9Qd8GviD1eWERT6Q&oe=6809BA59" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1 Module 2">
+            <div>
+                <a href="https://drive.google.com/file/d/1nQbO9aMHIjlr81lOw3EbJMb-yaJzlaG2/view?usp=sharing">Pagbibigay-Kahulugan sa mga 
+                    Konseptong Kaugnay ng Pananaliksik</a>
+            </div>
+        </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/480315723_1170003550984883_2122407812050080843_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEv2syPCUE6vu8Sj9jTlzw61l-SpxLTc1vWX5KnEtNzW4oPkIsTdnrIxp7GGnHpH7IDfSqP1WVtc4cNrP3tLJ28&_nc_ohc=bUAWjqzv14gQ7kNvgGWmw7H&_nc_oc=AdlLMsI17yVTU7teTfN-SjLmSBqMDJQFiUFBrlCH5omvD5ZYn5pDYx5fnN2j5jy7lxw&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wE-xBK8xqnP9BES2_HLr6B-85mZQ79rCY2fwfCalrjGZA&oe=6809A7F9" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1O8GuX0zHroP3MqjAyOb22iDsSGOPuasp/view?usp=sharing">KOHESYONG GRAMATIKAL 
+                    </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/485207234_3995444370692434_6669989389867475860_n.png?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHDdrCigK7_ecCXmyg9Ra5CTCOewYfUNpxMI57Bh9Q2nMwvd9QsFXUkq76EvLnsqB5nCSwIIrHblDjGBJpJecY-&_nc_ohc=dLFjegB22jcQ7kNvgGMp8Ku&_nc_oc=AdljbafTR_d0LxxCkodY7q2hOPsGghmgJcl_2kcDSmN4YkR5fb9BzIWBuQX4if_hACQ&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wELiUM-gMqQHAvu1BPUp9U5v9mQKVYcrfSUZAFSdD4GLw&oe=68099EA3" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 1 Module 2">
+                <div>
+                    <a href="https://drive.google.com/file/d/1gK9Hli9ewbIOrf3mgng5kjaTUWqid0hv/view?usp=sharing">PAGBASA AT PAGSUSURI NG TEKSTO</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484623238_1002915724592635_319049309929987813_n.png?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG5DC19RCys4F5MHxal1JE_e7KhybTVyox7sqHJtNXKjJeSkD8jASe8T-0tOJDmoogNxT5fVSYqw5AAUo_xn9_H&_nc_ohc=CpbOlUvD_xkQ7kNvgHqUTUB&_nc_oc=Adm4NuJ2POB9T-RtFqUcComdjhAJLnAX_gV3vRgIOKUtPSyhCLeSXLlTrmjYHQcbh7E&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wEDqopWnLCyrvacfiRUo7uMaTcIkbigC45P6ViGPM-E0g&oe=6809B701" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1tWe30W2pwNBQ64hWpuKtPrGBN3XBl-le/view?usp=sharing">Pagsusuri ng Ilang Halimbawang 
+                        Pananaliksik sa Filipino Batay sa Layunin, 
+                        Gamit, Metodo at Etika ng Pananaliksik</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://imgv2-2-f.scribdassets.com/img/document/642530740/original/331403036e/1?v=1" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/14xAq7FeKWeSnCyzhrJmll4MYk3mz28Mu/view?usp=sharing">Pagbibigay Kahulugan sa mga 
+                        Konseptong Kaugnay ng Pananaliksik</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/485914299_1015438203791405_2275973161158846056_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHvEJodvVYM2KiuTWPdoeIzPdzwYQAQZrk93PBhABBmuUf2dEVnz_en2dhyAQ86aMkZ42VDiMESPWDoQ8fvTCQo&_nc_ohc=msdcZBXXV5cQ7kNvgGzGcQI&_nc_oc=AdlisANjayRPYn3FqLV1f7n0I3KYE7kctuQnIFOYutwlNNo7iEosZqIhi7uCfP-YEA4&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHQpoPuWkH8ozxUGBMwItHKoEswN3wfreLPjMaoyRCAFw&oe=68098F61" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1sVAvJf0rkSM0Btg6v67-zIp00I-PL7zS/view?usp=sharing">Proseso sa Pagsulat ng 
+                        Pananaliksik</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/485852482_558215266748353_8320098372170115585_n.png?_nc_cat=101&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGFAfwBoHSx83QMkxVDnCnyRYngs9quQp1FieCz2q5CnfLAtkmmdrKLiiDQuP8v6Qs8BjYKyCRYCcPDFLZa_FoX&_nc_ohc=TapUaGkB03cQ7kNvgG3YEwN&_nc_oc=AdkEE3fCaQvFeKuTEKpkLDB8gycKGgBndnRH6tVytVVZZNL6zXijw7zb4NMghkLX2yc&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wEhljV7RRxpVrAo5X8gCfpMeQvu-hEm-Ecic94UvoprZw&oe=68098A4C" alt="Pagbasa at Pagsuri ng Iba't Ibang Teksto Tungo sa Pananaliksik 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ChDuDb0XakkmlUmt2sE9vPNqBufnDRrk/view?usp=sharing">Lohikal at Ugnayan ng mga Ideya 
+                        sa Pagsulat ng Pananaliksik</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Statistics and Probability 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483275857_1347508246380359_4580143035986993939_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGtAgN2EAQY-Nic0E3ItvzS_0zNes_priP_TM16z-muI5vvjfuZWZCsFF2fFhTLes689EcrovK1Tqf6nBSAIcaZ&_nc_ohc=oNbHnRXtuIcQ7kNvgFUsPzq&_nc_oc=AdjoyRO_gOHEYcWYgTmanWuh3VE5XJqSwyrDMVe-AkUTFfufcXQktXOOhO6yMMIp_sg&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wHeQcPlPHeCTY170YrSx3bwk64nmZdRhOl1KIfaEjstxg&oe=67FF8B11" alt="Statistics and Probability 1 Module 1">
+                <div>
+                    <a href=https://drive.google.com/file/d/1X-jPhhB3UQAB1lDXGWZVIqvizuT4M7Ql/view?usp=sharing"">Illustrating a Random Variable  
+                        (Discrete and Continuous) </a>              
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/484326293_1282129282885582_8858758672329239425_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGZPqMRSDWQCdp0hAU5c7yPbsxkAazSHrxuzGQBrNIevOMG5CG54YmjWnOWISqXuQXh4McxVaYRwqEyJMIZtE-3&_nc_ohc=56hI57HylJAQ7kNvgFWE2Mt&_nc_oc=Adh4q_xF5et12HkQZjqA_VbdTAn47PzPRUphK8S-nMdRt5wx8dZOFXM3Sz04bvEdxgc&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wEwx56w31iDngNriZriA4OMTX28m-jB_Jbg9ioLXcWcPg&oe=67FFA4D1" alt="Statistics and Probability 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1hpvzWHZtJvJWJSpLk5hHJ3ZdAxYDXgk4/view?usp=sharing%5C">Distinguishing Between a Discrete 
+                        and a Continuous Random 
+                        Variable</a>              
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483277330_1774953396631505_3011030226705729042_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFiETyZxKSdCKEnQBGFO4OHWHaX0cOR7vFYdpfRw5Hu8dTzEs1Lp0xOwJTAELhsN6MFBZ0APFHTtNP5raYYOHp2&_nc_ohc=9XJvfuMAfKAQ7kNvgFcYlyN&_nc_oc=AdjB7JcRJJJ0rSjMRG7z7goHmRcwqGLqrT5ZC3sot2Q4COtCkMSTEp3e-0JYN8fMvPo&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wGaPOaN1EyAuHBbLujywoE3dLGy-DbHKeutZxfMyk8hfg&oe=67FF9CE1" alt="Statistics and Probability 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Cw2J8e6g6VmO5-g926X3bgGCvXsPc2EQ/view?usp=sharing">Finding Possible Values of a 
+                        Random Variable</a>              
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483263235_679074611215467_3329521146622981254_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEVxakzKzaq-CjRa0wcMU6er6kcyA3KH7yvqRzIDcofvPwKDsQOtUoymddcNGB5CfX-RoJ94gYxA2CP_NjBvsQa&_nc_ohc=iv0K9eHBgiUQ7kNvgHDsMai&_nc_oc=AdjgUhhzEJSNg-9wNaRoj3ExvziYyG5IJ-VAT38Xao1RwLLdo5SvAFLnoQ8a4hdt0RQ&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wGjyKhgPOkgERLqWIS0uQK4ZOo62w4OV6UXupytjBS1hg&oe=67FF84BA" alt="Statistics and Probability 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1f7Aa7F7wNO4q5wcVdFe0GTmVnoJ5cKVc/view?usp=sharing">Illustrating a Probability Distribution 
+                        for a Discrete Random Variable and 
+                        Its Properties </a>              
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Statistics and Probability 2" style="display: none;">
+            <li>
+                <img src="https://th.bing.com/th/id/OIP.XDs0ygvqSMi_Dh5pCmDC7wHaKe?w=194&h=274&c=7&r=0&o=5&pid=1.7" alt="Statistics and Probability 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/12RLuEV6AOd-ut-e8CRs9JW1pjl1ABBex/view?usp=sharing">Illustrating Null Hypothesis, Alternative 
+                        Hypothesis, Level of Significance, Rejection 
+                        Region, and Types of Error in Hypothesis Testing </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/483752191_1565060347507461_4294355132307293286_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFHl8C9mcnQnn9IBSwtBMh-WuKncdMpwtBa4qdx0ynC0K3VIo63AqohWAJ--BxfgGwcWIU8R-ZCT7uLymj2hddN&_nc_ohc=eNsrSjR90lYQ7kNvgF0pWAZ&_nc_oc=AdjTHbYAghLr_pRWVnYuKWRJlfoafoldGLdklumpNMWHTOeY2VBK3JpphNDzCso9U7s&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wFn7uqudchdhL5XHTLQOANOrj-28ROd6FabCoBOjNOrww&oe=67FF75B3" alt="Statistics and Probability 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1xlpy-LaPoKvJ8t0cChdBS3iFEZBVBfaR/view?usp=sharing">Identifying the Parameter to be 
+                        Tested Given a Real-Life Problem </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483527470_2024969018307887_6203223384636133311_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFgXXpWaGZzTm2JxLvWfSw1uIZE5LAJKnK4hkTksAkqcjW5g3-GAkPdoqBTr5PJiWqbKGtDSEGxPHvFd9-N8rUo&_nc_ohc=Zz4Or1B0S6oQ7kNvgGmNsfw&_nc_oc=AdjCwk_p4840ziFkPCeLg27L3vKZ0OU-IWx0sRIY4orkF6A9ocZG6zNANtAoHUMFw-k&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wG3CcA79msADcKPJmW3wTSasqK__CQh6X99DtCZJfmo5w&oe=67FF817D" alt="Statistics and Probability 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1kkYmomPASuD2bQ4iDWn9HhtbTxBVe09r/view?usp=sharing">Formulating the Appropriate Null and 
+                        Alternative Hypotheses on a 
+                        Population Mean </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/483314677_1375992496868221_7912335203656421999_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGPm4mhAr-_1bRSsy0cJtQMzwX1Fs1nuynPBfUWzWe7KeXaOXCCC0-3r2nepKykXi-FZn35qYeejrxUj1FckRyS&_nc_ohc=APuwG8bhoIoQ7kNvgF_LXG2&_nc_oc=Adh-EaLhEYuDMYGx72gT4S3Da4DDC2ymDrkmB9XtnQYyrdbm0u-uJPT5VwEEIgSdhhM&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wEfBpA2_kz6zz5HoQn_gcHqkgYrq3B3RdHol7eREY9rVw&oe=67FF98B8" alt="Statistics and Probability 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1yfnTPR77ZxyLA9w1OHwHDPD4oiSKIaxR/view?usp=sharing">Identifying the Appropriate Form 
+                        of the Test-Statistic</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Philosophy 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-3.fna.fbcdn.net/v/t1.15752-9/483326593_1601311930559410_9046923614709129562_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHFQIJ7p9WpTecK8BCVMscOzj-dCLVoEsPOP50ItWgSwxv16O78dNbqZii3tVsDN8jRpvIQL0PYDtytwxLeKG5Z&_nc_ohc=HyDcb5A7QUwQ7kNvgH1nprm&_nc_oc=Adg7gThO_WBUP61ImYWJ6wCbxQQEyFwKJE7TRhcvRCSVN-pAzEhLY0vnLt12T2_hgOo&_nc_zt=23&_nc_ht=scontent.fceb1-3.fna&oh=03_Q7cD1wFjvypk9FtKN33LUErZJAINTacKTckh4x4U1kdjV8oaNw&oe=67FF73D1" alt="Personal Development 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/10RQiibwyJAS0D-RsgwA5Px19sI56Ypiz/view?usp=sharing">DOING PHILOSOPHY 
+                    </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/484430165_1398578894920542_8997023251513565902_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHYca_5t-1Tg5SaVCM10gPIlppFz2dD3-eWmkXPZ0Pf520EwAAcy2_1c6Ey4cjxoPhbJpjcq0eC_bH_hfHcIeJg&_nc_ohc=Yzwld1r_nCQQ7kNvgGv8Tay&_nc_oc=AdiCFSu2MVovtQNL4g7kigKlNQjMLe1NaW_2BUQx1SEFX8lvM9QXblaRVJ1FNu3QjBQ&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wGe9KOU7iZ5iTMmZFRSybS4yOfOz96puDZx4QQiVDzFwA&oe=67FF92C4" alt="Personal Development 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Qs7bfWa6S6Iu_ANkKrdFAJ-4D2fRJo49/view?usp=sharing">Methods of Philosophizing</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-4.fna.fbcdn.net/v/t1.15752-9/482107851_1806478030188079_464783864327975219_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFDrIqcGpWcQgmimVJZz2ZYSbwydbpEafhJvDJ1ukRp-LMwHZi_n3GQrZkJxUUlgN6KkRF21FWjqR6FZFtkSvy_&_nc_ohc=Crl3o55h_QAQ7kNvgG2tFQA&_nc_oc=AdgbI4wGaRsZsvWgANMpY1y3soahuPuCs4Dbr9XSYizbAqxfoNkEQkasSdatcG1XEYA&_nc_zt=23&_nc_ht=scontent.fceb1-4.fna&oh=03_Q7cD1wFykT67PKbWIHkyxd1d63ze51EZLCl620PDduNG_SG28A&oe=67FF6D92" alt="Personal Development 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YJx2Pl2da4XVpNqJn0ppn6FkZetdvRjw/view?usp=sharing">The Human Person as an
+                        Embodied Spiri</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/481490118_1125441662667191_53029006747107268_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFonmKLNs_DyftUW6rgU6mgA0svzgLdR0QDSy_OAt1HRAZzaAbRhyT8bN8kGlW_17AON502fn7aH8nfDAc1tnWQ&_nc_ohc=a7NGwCvApkoQ7kNvgGtZgf6&_nc_oc=Adg1zrYq3artrJGdd7HHLqgah2d-s5_SIJeFqNakLgs4Hchcpo8l0Ivc8M6kOk_g_9k&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHuxzo1t9pQF9B9t172KUHaJZemxYAVfBq_MjiPl3dCgg&oe=67FF7D60" alt="Personal Development 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1CydcDlF6_2DRLgeHcpbIOsdYGXg2sZcQ/view?usp=sharing">The Human Person in the Environment</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Philosophy 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483676030_1187810073055813_8962669702650258243_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGIxXcHJ62Knq4I-2lhSkwq23nvYkJD7ELbee9iQkPsQuT9yKIYlQvlhTK9Gf26BqumgEpU4cyuogKmGg9Dr64m&_nc_ohc=aHfAM6nqajIQ7kNvgFB0_Je&_nc_oc=AdjwyBAmdHd2yV1Zp6sbv5Py5X_dYf7joVlZtjBZXfH73fnfMdHLt25XPwqA8E1GyUQ&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wH70pbMEwUfwETQerpfP6FYiAjDWn0qrauQmqd7sMIeTg&oe=67FFA1E5" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1NLI12t1Hfv-RWiGht6QOWqmty9E62Dd6/view?usp=sharing">Freedom</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/485004481_1372843560564894_7725433593391416364_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGaozWVl77aCdbR7gbt2OctuUjpXLRwdr25SOlctHB2vRHRUeQLhYt_97U3Fn7TWs4Dz55FmMCobLGwCfcTVzh3&_nc_ohc=gWKhd0UExF8Q7kNvgFcINEO&_nc_oc=AdjMUJ40PgUQjR0ncapJL2tfCdd4gw5iGTEbro82pL3ITjZrNEGMlaKoknvRCfsD0YY&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wFs1XWxHV5wm7FKpt0yo8lZ1pMNZy0WvcWJRbuMBU5DRw&oe=67FF6D78" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1BLTQsHlksq2ytPjUOnNOI4KBYh50SVwL/view?usp=sharing">Intersubjectivivity</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/484333529_616078891255361_1759836649805936236_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFfDx4P-i8FCO7GRQgj1HOV103Zm7br4bfXTdmbtuvht_t1lGOQR_FIbNJTAbT8figQDEWJ7ZusjbkMV9Lpribs&_nc_ohc=o49Zb3iMQbsQ7kNvgF-DZ-3&_nc_oc=Adj7CYymcTkUh9JkMzc4IjeJ0j7O5L5Ji-WO3ynwEVnq_UrGHMXyvkrqglzOF7H6Q8Y&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wGKJt_zb8Qh1Z4dLThTMqWGgYsOpvkffWEZ3Btdf65jYg&oe=67FF9E67" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1IDc1I1M-9oVFt38pHz0pUmTpp7H5D-ek/view?usp=sharing">The Human Person In Society</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484361890_2447093918983697_5482615704774495030_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFDWPfje8GI-6EylvugLXDrCZIkjBRtA98JkiSMFG0D38R2diJhq8LAoeCNViq6VXg7VKiePajwDzcl3H0VRrvk&_nc_ohc=WXcTk2dR1JEQ7kNvgHxoaW4&_nc_oc=Adg0Hw6hLE9QL14emCJBMdRw1E0pIXwpxD091k7Duju3TYahGPc48mrPvAAFa7uuiz8&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHCc3pTEOD9f9wqCuYZ_LL4w9fL3sq16IuGI4eGTgklHw&oe=67FF71F4" alt="Personal Development 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1p4XSbCLpmg5lEW2S0dVAVTlqfkU4P26t/view?usp=sharing">The Human Person In Society:                                                      
+                        The Formation of and Kinds Of Society</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="HOPE 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/484623845_2647507575436305_4205009497663866280_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGdWpJw-mlF4pgnWIA-T48CEabfXdb8bzERpt9d1vxvMRnX5-4Ho0BJttmf3q-BMcht98Gmh4vf9zsmIQlM2WsW&_nc_ohc=M7DcHWMTfeEQ7kNvgF7Z44e&_nc_oc=Adm16Nxhg0j3Gd_aujBnFVQv4qAj-cUqgUqO0nQFsF9rD2ra66P22QGXDDTdcVhDAUg&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wHWocJa4iAuHmRiLPQRFKKdGhPA4a5GHty04ObonbAPDg&oe=6801B8CC" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1VYMHPugo3LgdmorIpo2_zoZ2VIPTaniR/view?usp=sharing">Quarter 1 –Module-1:week1 
+                        Self-Testing Activity for a Healthy Me 
+                        </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/483361604_569994736079494_6183420607655679621_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEcT6EIl8Iv0D1dpDjrp_aratPWI62IruJq09YjrYiu4lYULCXQVU8XD60CevZdk-y8n1VZMYFg1H47XxQyQWpn&_nc_ohc=83UQDb-uk9YQ7kNvgFFCU4k&_nc_oc=AdnW1rqQuPArrQdSBxZnWDTFppdrYlrjLOD61bRSY_3gJXAWxJEpjQPRVHqaca8dzgg&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wEmqcM1g0bZjpKOaqjwApoPBgDBKSaoiuVD2MSunEveUA&oe=6801BF76" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1yz35UtWdH5ElLp5ze4W7kA4c_ehzXYCC/view?usp=sharing">Quarter 1 – Module 2:week2 
+                        Barriers to Physical Activity</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/483730120_3821258928185370_784489632859144383_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeE31gm4qctvWp1McrWyaREWGN4duuCJAmAY3h264IkCYM-0WthDEgNK86r8-GPpJkvrVXw-ts7U0w6nEI1YgFaI&_nc_ohc=9303HvOb4KkQ7kNvgHFL7RV&_nc_oc=AdkEWNrIwBpieDK7NlAqbRSCKm7CP7JPxhUTNUyZiUYkxpcyqTaB5Hq-pd0ch5q46Vc&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wG03GdsyCbRJAjkUxHo8JuKTkFmPeOCAsqZMNPSZxK53Q&oe=6801B426" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1fQLuLO4BPKU5vl9Y9QxQZWijKkUSbRB2/view?usp=sharing">Quarter 1 – Module 3:week3-6 
+                        Fitness Goals</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484450718_682085147817550_2149238761122080204_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHR23abuzsCwUEyJdqDHtlK46MugKjvST_joy6AqO9JP3fZSajUqj_E1kMkskR1CEAHpv_h18wgIBmZx66Wl-US&_nc_ohc=lSZgo8tcKToQ7kNvgFyGSry&_nc_oc=AdmycSULt0DvtVP-Ra7oMTi4EU3rTACPVmcTcZkMkTA0PNQntXBoQpOMdSAcQO2mKuU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHfe2K7GjguZkdENizv6_L0mC9DK-ypLPFD6DPjbPssKw&oe=6801A780" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1NQn1nm4lpSaYB9IL1q78UK02AphhzV9R/view?usp=sharing">Quarter 1 – Module 4: week 7 
+                        Physiological Indicators Associated with 
+                        Moderate to Vigorous Physical Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484450718_682085147817550_2149238761122080204_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHR23abuzsCwUEyJdqDHtlK46MugKjvST_joy6AqO9JP3fZSajUqj_E1kMkskR1CEAHpv_h18wgIBmZx66Wl-US&_nc_ohc=lSZgo8tcKToQ7kNvgFyGSry&_nc_oc=AdmycSULt0DvtVP-Ra7oMTi4EU3rTACPVmcTcZkMkTA0PNQntXBoQpOMdSAcQO2mKuU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHfe2K7GjguZkdENizv6_L0mC9DK-ypLPFD6DPjbPssKw&oe=6801A780" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1oYZiSYVap3y6LxXkd9ym65D4KCmvWhsh/view?usp=sharing">Quarter 2 Proper Etiquette and Safety in the Use of
+Facilities and Equipment</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484450718_682085147817550_2149238761122080204_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHR23abuzsCwUEyJdqDHtlK46MugKjvST_joy6AqO9JP3fZSajUqj_E1kMkskR1CEAHpv_h18wgIBmZx66Wl-US&_nc_ohc=lSZgo8tcKToQ7kNvgFyGSry&_nc_oc=AdmycSULt0DvtVP-Ra7oMTi4EU3rTACPVmcTcZkMkTA0PNQntXBoQpOMdSAcQO2mKuU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHfe2K7GjguZkdENizv6_L0mC9DK-ypLPFD6DPjbPssKw&oe=6801A780" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1VvD2gRAbCtdESzv5LXOmqJrq58xhs7SF/view?usp=sharing">Quarter 2 Fitness Events Participation</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484450718_682085147817550_2149238761122080204_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHR23abuzsCwUEyJdqDHtlK46MugKjvST_joy6AqO9JP3fZSajUqj_E1kMkskR1CEAHpv_h18wgIBmZx66Wl-US&_nc_ohc=lSZgo8tcKToQ7kNvgFyGSry&_nc_oc=AdmycSULt0DvtVP-Ra7oMTi4EU3rTACPVmcTcZkMkTA0PNQntXBoQpOMdSAcQO2mKuU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHfe2K7GjguZkdENizv6_L0mC9DK-ypLPFD6DPjbPssKw&oe=6801A780" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ehBAN7z71txPVHeWZScvQRDg-5bxqTf-/view?usp=sharing">Quarter 2 Value of Participating in Physical Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/484450718_682085147817550_2149238761122080204_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHR23abuzsCwUEyJdqDHtlK46MugKjvST_joy6AqO9JP3fZSajUqj_E1kMkskR1CEAHpv_h18wgIBmZx66Wl-US&_nc_ohc=lSZgo8tcKToQ7kNvgFyGSry&_nc_oc=AdmycSULt0DvtVP-Ra7oMTi4EU3rTACPVmcTcZkMkTA0PNQntXBoQpOMdSAcQO2mKuU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHfe2K7GjguZkdENizv6_L0mC9DK-ypLPFD6DPjbPssKw&oe=6801A780" alt="HOPE 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1KjIqtHckoGUKRo2OmIMRx8h1VqtXv3Mf/view?usp=sharing">Quarter 2 Career Opportunities in Health and Fitness</a>
+                </div>
+            </li>
+
+        </ul>
+        <ul class="module-list" data-topic="HOPE 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/482839642_1854598145307145_8234277825599834162_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGH7F2ZvRwXx_Wg0xQREujpVE87-8JLSQpUTzv7wktJCluCxqHhz_V9p_UDZ7u2FeV3BYR0l6wBrFBPWhG1s9LH&_nc_ohc=yf0KHVEx3DQQ7kNvgF0pEQp&_nc_oc=AdlQvQ7mFRat3LUmlWdhsJWLaRSyjjkBG2A3CKXiwc3DJBBTcr3EC_IwHIG9X-zLO9g&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wHPZ0pd0lJPN7qlGdZmlyyzCppHQ1nSmCJTWtPImqwu8w&oe=6801CB03" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Z5cPyBdKoXUrroEtFqze9kBm8ASBRgIe/view?usp=sharing">Quarter 3 – Module 3a (Weeks 1-2) 
+                        Stress Management </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/483259401_620890357381098_1335667513479743967_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHRRGMzwAXCASJb8qzgUC9N5233dl0gTVLnbfd2XSBNUuKiO_P8-eUmi1Ep5zQG1mTmvhVwWRMDbN8372ahLZ3t&_nc_ohc=W-RKehq-4bwQ7kNvgEang_u&_nc_oc=AdnnnTlDZTUrHK00Ej-BiXabUYXMq5zRBy8hDL9GuPaGTOgFUkCOSnVUOWMSQFtPsaI&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wF5hMyN96tUdEr-bzm7vjX29OxL82JsD-7Cgq-hdrX0Ug&oe=6801D208" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1jE7Wl7-WebhNAubjSpaksdLCYybxf5Tm/view?usp=sharing">Quarter 3 – Module 3b (Weeks 3-4) 
+                        Health-Related Fitness, Barriers to Physical 
+                        Activity Participation and One’s Diet</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/483536338_1306605307275455_7391592239716432041_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFIdffTlSAXA8cZf3XaoH5r4JoqL2KZMOPgmiovYpkw48pPrBOgD8MEg1ZTFhkxw16iVgwZqIJL8KrmKsWtc08b&_nc_ohc=hgUDltj272gQ7kNvgGr7Eu0&_nc_oc=AdktD0vhJS6SpahkP6Mf9FnNKG4qD9HwEqJ3FSlMnbhDlnDjQ23DXfetF22M_a3GDE8&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wEJHEWGK_w1yUY2_7l-1Lh3jZBtfP_rInJmei_YOPDjQw&oe=6801B9CA" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Iu4j7o83ZScdHOxrrKY0axWdid5HTJ8p/view?usp=sharing">Quarter 3 – Module 3c (Weeks 5-6) 
+                        Technical and Tactical Skills in playing 
+                        Sports</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-4.fna.fbcdn.net/v/t1.15752-9/484833900_2486226671725466_3225489799110561773_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeG1WJD1enGLzt6jlqsSB6Aoui3t0TulrKm6Le3RO6WsqaqL0KNbO84KwfM1Oatly8XnCI9R3DBbUkdqVzIS2XHf&_nc_ohc=CNUR_yjjKe4Q7kNvgHAhmkX&_nc_oc=Adkem1KOeW5PJs7ybsmwP-rKTojza9XRIrUAQwMs1IXmwXIOWD2rmrg3exIm-x0MAlA&_nc_zt=23&_nc_ht=scontent.fcgy2-4.fna&oh=03_Q7cD1wFu6BwX2nx_-TzXK9qJujlehskIiu0BcWAe2xeP__PcJQ&oe=6801B249" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1PTR4vDfOXvKFNMhlAgqPAO0MEQOgRIr7/view?usp=sharing">Quarter 3 – Module 4: Weeks 7-8 
+                        Choosing a Sport</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/480739808_3816588548654278_2935503380211791321_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFsIauFHQYleR3oqG5cqaIZGNML3UlvCFEY0wvdSW8IUVJ0-M-dt1ETy-TyGTqMtAS5WXcBUL7whtCdx3p-By5c&_nc_ohc=p5h3sJIMcgAQ7kNvgFc3pJS&_nc_oc=AdlilwzA46MaYR8jWzSD0pNqf8N5nQX4B0NBRwDVZlBpuXlfVxOaRsTB3aNARbHdswc&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wEUFq9bFoksnWIg0EHq0jmD6uegXycRmi83iBVNeTvFYA&oe=6801B1B6" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1TGyyW3cTgJigTXaxwVb-wOIlmOZOY1LK/view?usp=sharing">Quarter 4 – Module 4a: (Weeks 1 & 2) 
+                        Safety Practices and Sports Injury 
+                        Management</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-3.fna.fbcdn.net/v/t1.15752-9/483287517_1655751438369039_4605114798719813019_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGgiXh2TICUZX9f1ilr5dkGwJtBdZ5HSm_Am0F1nkdKb_KZsRe3sT36ZsaUmJzy9-53z1yf8f7TJLxibtEDFDiq&_nc_ohc=VGumkmN-eHIQ7kNvgFGKMKe&_nc_oc=Adn2YWl0DJwf817Z3mD6yAxN7OHlhyc-UU6MHxWZZ-7dzGdHFyhJDI11fXww2Mwa8Lg&_nc_zt=23&_nc_ht=scontent.fcgy2-3.fna&oh=03_Q7cD1wENxyVDDthubvfgvNDEzMp1pGbSeYMKP5AhoeWd887O4Q&oe=6801B5C2" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/162SG21_JVy22o-IWEvAwihDOP3YtsYRA/view?usp=sharing%5C">Quarter 4 – Module 4b: (Weeks 3-4) 
+                        Sports Introduction</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-2.fna.fbcdn.net/v/t1.15752-9/481795006_1166733501750854_8122947328628604441_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFtQR5mPdR8gFBhgPLZy03EwJ2wdpO2fwfAnbB2k7Z_B_umPyWO9hAtBvp_QPn1b1PtXJ3n4Ro9aZzFZOJtGiqm&_nc_ohc=cHUqH6UT12UQ7kNvgFllQrX&_nc_oc=AdmFtw4zN2dNFmTWSSWwEgb0gIErD3U1Rq4Lhgb8j8YF1A2qEiiBc9C7L1sBWb65u4I&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&oh=03_Q7cD1wHI5_cG4eLm-C5VBPpzR5JtNzeoWlyX5v5LwlXfNOL8Fg&oe=6801AEFF" alt="HOPE 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1x5wA5XuKT39Oi_xT3Tiq9VQp_F5RTy1D/view?usp=sharing">Quarter 4 – Module 4c-4d: Weeks 5-8 
+                        Organization and Management of Sports</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="HOPE 3" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/481286943_2578885305780309_2032160797237346831_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEE-U-9ct02peaq3p50JzFKOy4uYeW8K2M7Li5h5bwrY_2rW_VULvxbh2Xh_kcBagXT2SQNFffDGQrmQAD9iDJc&_nc_ohc=x56cwBOeTIcQ7kNvgFPAfnY&_nc_oc=Adj1yXPX75mfb2Md9oQ91n4OjCM7V7gHdIS9ghiFs4MzAmVxRrryXeLtgQdr6bkTg2NsmfBOgAfX-ZSWri8Cso7m&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wF5cOl6e27VWChDUIhplEfarPgyR1WEdtFRLZPq6h5qMQ&oe=68007051" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1L3X02XN90TrIFR9fC1m4siViQTwOIOlq/view?usp=sharing">Quarter 1: Understanding Health-Related Fitness</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483691621_955568763441077_7499208800931141598_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGvf9KT0FuWZh_LYyFlyS6I2W1kiTZiBbPZbWSJNmIFs4dzfNI6CooP1qjKx45t9NIZTWdb2PtpRlv-4rSP_FeN&_nc_ohc=sZt7t6gm_AIQ7kNvgGtqZmd&_nc_oc=Adhbx_qzW0Nai3OMC37gSzAdq4ZUTNiJdoeGURsgdSQKv69c2yZHMKEteaH0BrAdfUbOupsN_Si38VbBXL24ZNEo&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wEHutwenu2mRUBEcWyLbobBJJYfH3wzy_GZ_hkak2Hwlg&oe=680076DA" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Y8omng6HP4BhAT7cqdTZ9CtvmACoydev/view?usp=sharing">Quarter 1: Dance and its Benefits</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/480083672_1656046911670630_2653612843307638637_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEO051l4ld9-_6FCcak38VMSPsiS4KHaMRI-yJLgodoxHsCyPmwJnDKdk7VeVOp0SiNmfw1DXR2WWJ5kBxDV7X9&_nc_ohc=-cHswm7riAYQ7kNvgG5gPbY&_nc_oc=Adi2YkxqUJ2P3ICkJsfz7tc1LkLwEtfxC7WLIcPefLa00kfNCZfjm0HhzisnTt5HCLQpOGpgAhRPYt9stke6pJ0f&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wE8aqoZRQbYQDuw2fNaB0Q_bdmQXWT16U52rQOaGgqXfA&oe=68007A5D" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1IM5iWjudtUCngnTi2kDRbT-3aJ0-JvCS/view?usp=sharing">Quarter 1: FITT Goals</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483765314_508261292107314_5849635392636886700_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHKl3_UEAa1qKxqnR_GxUzs46d9rN5SHQPjp32s3lIdA1waMKXVh4WUg2xbNq2yDumITAC_6GCsekua-DAkk6wN&_nc_ohc=YK7rbtSwP40Q7kNvgGoVe_T&_nc_oc=AdhAl_dpO1Czz9UfgxnBNnY2pCBlF4iah2UkfHpCm2dBZhH1eosm1IsjAEr7fiNtlCO1bIzju__X1aBFousrQoEV&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGeLd1yUXs-3KPnBwqGneVm_KKZEEeupZRRqRLTrnPG7A&oe=680077CA" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1GapJ_UGknSE0t7qDrxJOnY5FSA6gv7fM/view?usp=sharing">Quarter 1: Achieving Fitness Goals  
+                        Through Dancing</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/483815199_1209829230723403_1913650969228334011_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEApNpLY2jU_UEIJz3RKfLBp1HQTen0tl-nUdBN6fS2X_w6WX1N96EmX0STgfwU8wGXFui9v6btZZhsFDcbls4P&_nc_ohc=cZiaQopEctAQ7kNvgG_WPE_&_nc_oc=AdlqpIlYZjADo8p_N3XEG5qgOMwWnZEiRzez5xIE64s0QfBQ7l3NJzRYouzOEqtf0Cg&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wGN97wRsov86vBgg8FGIX3z0KgkgcFTI6rDY-ev8J5ZzA&oe=6809832B" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1BMwiKwrRduNKxFm9jlQH2vMmJiTMUjLd/view?usp=sharing">Quarter 2: Personal Safety Protocol during 
+                        Moderate-Vigorous Physical Activities 
+                        (MVPA) Participation</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-3.fna.fbcdn.net/v/t1.15752-9/482897268_1379960269665583_2351192634034707215_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGmoG9oVEpLKb_2xG58B6Aa5Rk0wc3jt5nlGTTBzeO3mTgpc85E_wEvGwW0Jfr0Sf-7rc9TH2-a3fouVS9PdRPY&_nc_ohc=Xeri7I-Dr6QQ7kNvgF21IlF&_nc_oc=AdlwTka4Mh9bFlcmrr-UIKeInkQkX4g-khkZGehlpoyS89hvxCkOEG2OfiDbo5wiTNY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-3.fna&oh=03_Q7cD1wFncz9LKaVTNxt1oyATAux1Cyzqb8KYmWFoT6YBRjpfDw&oe=68099D1B" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1EJ2Ig_OffF4t0vD65TSwOndWytYqpqst/view?usp=sharing">Quarter 2: Observe Safety Protocol 
+                    </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/485524159_4403573953202982_7009353590253704553_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFRFGz2USJTsTBNkZObjoyEzqKu2hPme3XOoq7aE-Z7dVCH68tAascQszhoVZd1MIZUUF7sDlQwDmacuodEx-yB&_nc_ohc=Zdg8TLfrFmwQ7kNvgE_Dr3E&_nc_oc=AdmSPOsB0G78xlWMleFjDjv9wXYZ155qKqvMh9U09w6jH0UcNLrovOO9jV6JoRkE8nM&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wG0QppKgXWLdGGEy5_CHeyWaV0jt9wBG0_VLThRHQfsCg&oe=68098A05" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1lqfzxxCuK6UOuh85WonVvnOj3ZSYQG4x/view?usp=sharing">Quarter 2: Demonstrate Proper Etiquette and 
+                        Safety in the Use of Facilities and 
+                        Equipment for Dance Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fcgy2-1.fna.fbcdn.net/v/t1.15752-9/483313056_687079677322283_6871358260546500392_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEEIfeL-lXTjF9-zLyez_nsVODs9TeHLtpU4Oz1N4cu2om91yTLr3QBy-utO1-SwRh9YKjE2XU7TxpVSrH7D-dB&_nc_ohc=bIov4U3RWWQQ7kNvgGVRryt&_nc_oc=AdkDurLQEaEYm8zT69-GO7uhD_OrLFHt3_Gor9alEjLsWTuNwzQ_juk4aMYwwEd0WE0&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.fcgy2-1.fna&oh=03_Q7cD1wFgnktXJCsr5YN0cjR8NvrFOAyWAMNpIXZmd6D97NBCYw&oe=68098303" alt="HOPE 3 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1gZpn_MES44uVMxst6oGC658GLAYTq6dd/view?usp=sharing">Quarter 2: Demonstrate Proper Etiquette and Safety in 
+                        the Use of Facilities and Equipment for 
+                        Physical Exercise, Sports and Dance 
+                        Activities</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="HOPE 4" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484491208_851307667141535_3076445530209458913_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFaOYkZ5BnPY8zeVHqvPiyvrj4Bastt4CyuPgFqy23gLC_RWp-pMCXWoLftchJEvgKOig_6T8GWIImnVvpn8POp&_nc_ohc=80gVK4kIXaEQ7kNvgFujhor&_nc_oc=AdiBaHziV7z87qjDgPLZxH8ZNari6M4GDQwKuuNZpNCGTxtkw0QjlKTcGlYwG4rtHTKp_eUw1ttk0wTloaNPMjdr&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFKboGD9PO5j-GbV_pU3J-1RI6LgE18M9MAtIjHgyKV7Q&oe=68008A3A" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Rkpuy_KPzSXmoyGc9d-oWSqRlQCowKET/view?usp=sharing">Quarter 3: Physical Fitness</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483694614_631590259769996_8264782129055528063_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEiWzTpskU3vd-CaQxtb18FuViYmz5qSXO5WJibPmpJcyeXbbCIBdhWIwE6Jqm5j_FCAXCB3Nel5m83z2U4GshG&_nc_ohc=rjpdEIHol2gQ7kNvgEZ6vqt&_nc_oc=Adgrx6qbAyHF4lAUjCYDT9B6BuRKoiKxGMV9Cz0scGco67x33Rik6_9Szvn9N4Qqm73l-5PNn1lDztxV3es9wjSN&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHXB5aLRB1qPD9qbdgFlSUdcrf9lO62ATxip8OAtk7vhA&oe=680072A8" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YaIYFYM3N20qlANkZsOb9mjLHN0u3A05/view?usp=sharing">Quarter 3: Setting FITT goals on Outdoor 
+                        Recreational Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/480604235_1477840243195937_7800705924004694428_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEhuB5UMMInTXmfiw-NkgtZgQsPIt2qbOiBCw8i3aps6DU0RLndMLsQnkZFtPLbjx9QKOlTR1zvMBX9P8yY30PI&_nc_ohc=jV0Hkv0NZfkQ7kNvgGbiuAI&_nc_oc=AdjLZiKxX7leNjigbApqaBXOPKZ8IT39lNqTHlU_mi5FQrqCmrC5Nu3iimp2IdNku9jLmRpzlvf6knPBb6M8L77k&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wEdbkIcgzaLZQfOE3c8TWtH0h5ITRnJkUVNlhPrWts06A&oe=68008DB2" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1YuH6mbxiRqeRzaRyPukXd0LiXm7Bj1be/view?usp=sharing">Quarter 3: Mountaineering as a Moderate to 
+                        Vigorous Physical Activity</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483260429_1639043393381662_7996251495283745290_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeEhi7eh3aUE9nuAUxpy17ZN4xIxTlPb33XjEjFOU9vfdcJETr_v5Gic3V8AjoGizisGMgtEPGWeRkxiR9YXFAtZ&_nc_ohc=b0c56UzKmb0Q7kNvgGiu_Gp&_nc_oc=AdjIobMMAUHC6w07ZhLPn6uvoH2F05wxBnmF5qkbvvp8wnCnP7IZa52lWqBJmIaX5n7VOdFTaogQ8t7W5H76V-aH&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGKyN_ayYdVeAI4B-AMQguh3KrWivLliYDzqquCJbfIWA&oe=6800867A" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1LIw2EzNIbMdDQA3Bk3YVT47FIoPMwYVh/view?usp=sharing">Quarter 3: Aquatic Activities and Its Benefits</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483756984_1167082548298034_8853844159822736149_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeESL4t_klaiTCXLrqHVzf_S3iBGX0Pk3HDeIEZfQ-TccLRiVN2P2pkBC3pWq80obhl54-xSH6OthuiZcivejDre&_nc_ohc=XAu6IWYRwP0Q7kNvgHZs1Nq&_nc_oc=AdjVGQ3tNNkbCAdC_MJj54zp_pkvNBo0p7NO3bktRfMu0LteiSfsGI-cwu7bY560XP8TFLvbiZ2f9-DBHnjHaIsu&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHLSxeXaxqZNzLnWNxHrrBX-eZ5Fe1ZOragrQN9C3ZLeg&oe=68009026" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1iDl2VmI8Aa3m9NrxIDfOow1SsKyuZsct/view?usp=sharing">Quarter 4: First Aid Common Emergencies and Safety 
+                        Practices in Outdoor Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484325346_1404502114040064_3117750050183551217_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHiMzs9iEy5MvgrlCeF1S_xLbiblR6g69ItuJuVHqDr0mTNcJvn5EnKSlnqmGELzq3NvgZ2jQWaxITuUMe1CrOA&_nc_ohc=gMlaMOnTD4kQ7kNvgElS2Z8&_nc_oc=Adj_n4yY1Sg9aCLexzo5jR2DPIX4egWwEh1xDKpAIxS4LiWqHGssM5djd_B25kORLpjUDSz7c52CXbOdIfS-o4e1&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGUwfoWMalr1qFQ3tzhDZrsqOYo-ndgc95rhFQlfHLTNg&oe=68008B7A" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ECxfhnJnHvFNJpBuWiICrFQ-ptmy6eQY/view?usp=sharing">Quarter 4: Environmental Hazards of Outdoor 
+                        Recreational Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484630301_1158154485515185_5296649193888796681_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHxSxeJJ8Ju_fln9bk4OIFYyBlnz3wiYJfIGWfPfCJgl5JMRzxxHbD-hlUQga4loRgP8fyYeDjAySzO808cqD0F&_nc_ohc=e9cWQRlOJEQQ7kNvgEvdh2e&_nc_oc=AdiQtm8wi3s8QCCzRh8mS8GKMI7zjxXcQQE6g7oRfmR3Ynvx3wY4oHq43J0EPteCBX0gZxVPqIsRzmACkqnixdVw&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGY11hVcZEC7i_0zeMAx7lcIyTcVaCn6fXfl9BrVJ6MTQ&oe=6800806E" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1f_9PrW9FmV12hZfulndGTzNxYuAd-OtS/view?usp=sharing">Quarter 4: Risk Management of Outdoor 
+                        Activities</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/482897268_1162436125258804_381177679772493975_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeFr2dOp8FVV0FlvBj4R8Y7CW1kt71PyJZRbWS3vU_IllH7in1iTIvKmF8NXteggF4WpSkwuvf20FrJAbYNROJOI&_nc_ohc=aGeVfGwkt_AQ7kNvgFainGX&_nc_oc=AdgnzVJiq2EIwmJ6RpkAUuw8v8Y7kcoE8e5Rgw4GkCxqKoGNsieG-LAX_ZPWV0HLjk2EgI9uXd51eOkx_RLxzp3M&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGVJGymkYPoxr_IJ9hD5wmycAI4y_OLakJ7HaSJIgdfkw&oe=6800ABDC" alt="HOPE 4 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/19rfuX_IkMprLJXDNwvSzurI0s97qU5q9/view?usp=sharing">Quarter 4: The Significance of Organizing and 
+                        Participating  Recreational Activities</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Contemporary Arts in the Philippines 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484167965_670307482112260_1130515566963864070_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHgadVoBlxK5vmCwePZarNGTdejiI4RlKBN16OIjhGUoHdiIC4Z7BOcAvJa-M-I-5hlA7QoTsGP-x2dw6FbeTYa&_nc_ohc=L0qfCNbt_X0Q7kNvgEeec6o&_nc_oc=Adhx3fZeHRH2Nofh8Xmpo805NYWv04Nce6uyWrRwc93ZnYUo1coB5VU3gtwbSJQqo_U&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wHyEYTrxai27a1DQojN4Rw43mwjnFbEEQIoqcCM6rwmow&oe=67FFAB66" alt="Contemporary Arts in the Philippines 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1wKpzC2ayGNht9obKZkt0jZrqXUc7SIYm/view?usp=sharing">Arts in the Philippines</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483351916_1819319655590430_2523076937020415084_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGYF9bQhuL48Zz2QV_vY1pfwIh07dbJZRDAiHTt1sllEALkmji0IjuCmQo3YbJLtKU4Kv23AtFjSdR0_XxTA6YJ&_nc_ohc=4WCYFJskHVcQ7kNvgGCeFLW&_nc_oc=AdgVGez8UMGNBfj7pxAVJ2Ud4Ce5EGYAe8DcUDAqxuhkhvBbGyl3LmDM6bXnSIb7Usw&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wH3o5bcSCAk94jxXjt_oXyCiVlXKzHSUdryfBKubJa4Yw&oe=67FF9975" alt="Contemporary Arts in the Philippines 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1KCHkEWDvu3UtxCR2mVNNdPe1mDhXqXFq/view?usp=sharing">Contemporary Arts in the 
+                        Philippines</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-2.fna.fbcdn.net/v/t1.15752-9/484591770_1777025547027510_8632632582707568954_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHyeMPHR5U0-cebZ7Mw-UY5pWPRvIRZMEWlY9G8hFkwRUx6OSCCCI7wSgbqC37u6xagPDIxY11MN20EhvTE7mxR&_nc_ohc=fRWbAirX3XEQ7kNvgHAPKvH&_nc_oc=AdgvrYCOoHgW8wyyHNZi3prOuZRq1VxdZkES5eIk8BIf_Kycw2kUM9hYYIfKIaH3JME&_nc_zt=23&_nc_ht=scontent.fceb1-2.fna&oh=03_Q7cD1wGHZjCl-QoKjq-p2HwElTQZCvhtx1vkYk7Wwi1IHOVyOw&oe=67FF7FF6" alt="Contemporary Arts in the Philippines 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1I1CB0IDCFKlPuNydDrzkx_3oeoQaZ6Mz/view?usp=sharing">Contemporary Art Forms from 
+                        the Regions</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/485078425_8971550359638835_9014513927846170551_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHOa_AwMvq1VlJTtROdzZQRzOkUF_Jlp-_M6RQX8mWn7_bL5tZKU-SpVTNK80Aa-jGTMeLXFHiRAoF-GytkVS2z&_nc_ohc=i64R9y6ypPMQ7kNvgEQ1pjq&_nc_oc=AdjW4lPOawheU1F7Ssx3INqqXe7BnfLfbqMG0Gjl1y0tTpExj6I9M5YwX6PxmO-CCMA&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wEeY-CAGOsgh6820-KUI1o7mFer5Rxy8UQ8VcBGNGCI_A&oe=67FF80BC" alt="Contemporary Arts in the Philippines 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1f6VnjNOMZU8U_1jvH2tP6pELkXBSrVHJ/view?usp=sharing">National Artists of the 
+                        Philippines</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Contemporary Arts in the Philippines 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483280753_1178343703679300_3931680230881800593_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGp_ppRbn35HrwpTezE524hkqvYljlwSn6Sq9iWOXBKfo26sdE5n1i3SMHNJZGxsAgZgn1Jka40SwzHkDusOg4p&_nc_ohc=_LMHteAEansQ7kNvgHXKh1j&_nc_oc=AdiD_aSWWmE5VHFUMUcSG0mq9RCErasH_cO_OOLITPd64ZJpwCq4sn3ethWwKJI0Ai0&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wEm7H6AtivsQCXAGcGZ7Ndcwi6eesMsb-zE0nePwioNFQ&oe=67FF77D0" alt="Contemporary Arts in the Philippines 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1AL1vOZEJ8zXoRNwezIbpcEovBaZ8ugJv/view?usp=sharing">Techniques and Performance Practices Applied to 
+                        Contemporary Arts and Appropriate Techniques Using Local 
+                        Materials in Creating Art 
+                        </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-1.fna.fbcdn.net/v/t1.15752-9/483962260_615401768039491_5368763213783120888_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHSYIsiV0OjGcGOvT1oMFTGU8w3K2prlohTzDcramuWiN4lqUzsmZZSiHDh2N-Ql25vpBVPPJP-UZLfziFHx-w0&_nc_ohc=5iz59QqnIL8Q7kNvgF_ASpc&_nc_oc=AdjaywJQFJv8E6EuvhDjT_F_6ObiXgLhdCghIZksdRNZUIg26OsYIBcqH77kPnTTp5Y&_nc_zt=23&_nc_ht=scontent.fceb1-1.fna&oh=03_Q7cD1wEkIObKDVwXTUR1zsIM5FsbCXJkPLa-w3k9mAuZTIDxDQ&oe=67FF7561" alt="Contemporary Arts in the Philippines 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1VdKRZgdukxBVkk-XZHIwMizH6W46JIRf/view?usp=sharing">Methods and Strategies in Teaching the 
+                        Arts and Artistic Skills and Techniques 
+                        to Contemporary Art Creations</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/484327674_839124151725277_6916132815467693529_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGbISurv-ujyUOdx6m3yT31QWkKJcV-qRxBaQolxX6pHGDdncPKAAMi11ekhdqIRwzABOomoZtlPN03Nz7GBvQ7&_nc_ohc=wZghB4xMR80Q7kNvgHPUl62&_nc_oc=AdhTCXji1chQknjmF1S8UF-1wnL5pvJFhOxfkLmq9eGHBTG-OgQyHYjBUB1y5mKBaEk&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wEx-r_fDenhOstZfuWiZjKJaNlm_5SBbPMawz4i87hwUA&oe=67FF98FE" alt="Contemporary Arts in the Philippines 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1G-o34L5YdOtD31_DvkMSK8Dv_bYiYiqV/view?usp=sharing">Critiquing an Artwork </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb1-5.fna.fbcdn.net/v/t1.15752-9/483316499_615986961247062_2844462048172697300_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeHgr_DIg8CQWKTh3_el9QKEtUczLZLNrgm1RzMtks2uCY6oH0OI4IGQdLOtbKZDH4f8YitozB8Xg7-5IW4be-Df&_nc_ohc=T-I9MdBVTV0Q7kNvgEPLYhg&_nc_oc=Adh1CA1t2A0BJR68IjfeLPPPS614qDHQUFIwe-tFE21tKbbH_nP79hzqfQ3nZGesCIM&_nc_zt=23&_nc_ht=scontent.fceb1-5.fna&oh=03_Q7cD1wGydtzddnHVhGcTKBh_3K49B2sA7R-dNEjW10mgUNVjqw&oe=67FF7118" alt="Contemporary Arts in the Philippines 2 Module 1">
+                <div>
+                    <a href="">Art Production: Painting and Sculpture</a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Understanding Culture, Society and Politics 1" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483367300_659736423184846_7187890988280267726_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeH8nzGgaqLdw10egsy3JgpIFpBJEnD80DQWkEkScPzQNGvPZXYs2TYuIHOvQSO0kgagL7elu53Mc44LP8rg5pvE&_nc_ohc=Nag1NB5NoFgQ7kNvgH1u8ri&_nc_oc=AdgG_KIp7GjLI245bErnvXBIRtdQcJ_OWP-fyd4OZsjn6w2V_LisJZN9dxdMB7AC_z06-gMx9ofZFWvPcG1J2vPy&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGUm0dCfdWNv81K9FSNdjUeoamxMdzc3deo0lm7lHxB8Q&oe=68003816" alt="Understanding Culture, Society, and Politics 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1NqsE4UsWH2Q5LTfMqUxOtFT1Rc0xvPye/view?usp=sharing">The Nature, Goals and 
+                        Perspective in/of Anthropology, 
+                        Sociology and Political Science</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483032599_630834479568873_9186718761636756044_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEPeeowKcUdJReO-QDKupfnwM4WdQiTjdzAzhZ1CJON3MeBzOhyXMnEhi7FtXsdWObn_h8bg8Yz6eIxh5FBLk3H&_nc_ohc=DiEZXdYPWywQ7kNvgEddvf4&_nc_oc=Adg9JXfQR2vZlr76YkN0WiHAEN2ejayyuTprVe8Kaj2k4soEiWKrWetwD_9bpwAhvsAfG8JlzggLWan9Rw8b4Kyj&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGB1V7VzcLg0DwKTEJ-rsZbEGOqGqLv-Hl02o2UCjlH6A&oe=68004681" alt="Understanding Culture, Society, and Politics 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1_KQUcz95emm0WJF6CwxxkhuGGGZMHBKA/view?usp=sharing">The Concept, Aspects and 
+                        Changes in/of Culture, Society 
+                        and Politics</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484470427_1811049966416104_712102685070565303_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFvWFarPRaG4AFFhyFXyKp8RuJaPoWF6FVG4lo-hYXoVSgXa4dvl386kR-b7n5hLiMgSUsdgIMrWD7Hj9gA4lsV&_nc_ohc=ZrFQZuZBnQYQ7kNvgFPYkBO&_nc_oc=AdhYPWi_rjBGV23YhOhvMtI6TdlMJi3n4YDJ4XJXxvS0gNdfCcLe8IKSvPxa2udCElrdIa4OH9eGCvKpJnXdiOtU&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wEHShxBKo1rmGlzqbe3KHyHAbsaYBfc8aIB-doaRPrffA&oe=6800364F" alt="Understanding Culture, Society, and Politics 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1ysa3Iy9wwwoC7iSeHs_KEnaTuns9z-v5/view?usp=sharing">Explain the Importance of Cultural 
+                        Relativism in Attaining Cultural 
+                        Understanding 
+                        </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483571532_2847468542080874_8562259643131013012_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEabVvlJaQrTS5fNjd-0um6H82V5sUZCSwfzZXmxRkJLEEWekalWXXkxvUz_nOad2zDi2WkziBYS3dYRhuyCIAh&_nc_ohc=d07JSr20YgwQ7kNvgHdb_Dt&_nc_oc=AdjQlh6jpEUvWiPUqCS1FGdqH7vGzkEl2FD5R362CVNv3UqXy3zB92GWNmWVX9TicAk&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGsvIMlJtd9mUsMXyVhG_l5NpRPJqnRHyKkK_v407-o3w&oe=680028A7" alt="Understanding Culture, Society, and Politics 1 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1Mv_ZNYN3vOw4G2Szozb2WDPSZGr1xLPf/view?usp=sharing">Analyze the Significance of 
+                        Cultural, Social, Political, and 
+                        Economic Symbols and Practices 
+                        </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="module-list" data-topic="Understanding Culture, Society and Politics 2" style="display: none;">
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483963748_894302109379021_5651340914850689975_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeEqO0LZOfov1EV_ktIM_pAM-QcYEqDVDq_5BxgSoNUOr3EvaIxZcCyiAkzShVfGLkN7ZJoICyRUiSoLP1gsHCEv&_nc_ohc=m0Q1qlj-koAQ7kNvgGFJ3sl&_nc_oc=Adi1slW7llDJ7vdcA3x_3vxHRnUIAZ-nyy_nUP03MJGOZhPkxhBOu7emW8ixbsCBWWA&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wFjuSp2XRZjXeqGY0Q99rJcJuK80nEdDqS7FVKn3ijkHA&oe=6800212A" alt="Understanding Culture, Society, and Politics 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1sk6oIBdsZBwZKtw2c4T9AHrTDbdzFrQ6/view?usp=sharing">State and Non-state Institutions</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483358087_658482420055619_6524462590636239804_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGq-U00hTswsxzCjyBcUVdTCa89JyGSAhkJrz0nIZICGX3XaWxCxwLlAd-MteFj77hDVBC9Zf58asNANaLBKDfO&_nc_ohc=63gMd6WpyLIQ7kNvgFVDe7L&_nc_oc=AdjSR2lx1-avj69N71yRnq9sWhyyyPKGdw4V3MYVFnUqiUkN6ea8opaRnDt2-XI4NQs&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wG5KuoxtTExJA9X7gZUTGrf465XyA7zBU3US4VQFHbeWA&oe=68001F6E" alt="Understanding Culture, Society, and Politics 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1NI7jEqcip062cjoPzvk2vjCuvhccA7EO/view?usp=sharing">Function of Education in Society</a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/484169657_553472560479869_7502999568047293345_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFPevMVy6wd6-M5MWirGzhMdiUtp89cqjF2JS2nz1yqMUqzG3_GvUJHdQdl-uOzgywXcypA0mHaxqGZnWW4EFGF&_nc_ohc=XswRRiWpN7AQ7kNvgE-UZo8&_nc_oc=AdgXM0q3xqpvXBQSTM8CPa7PW-bIwxKn-dRdx0Mir9s5wUFtYsEB2MAUyG7z66FJmE4&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wHWcRd2I6Iun3BFQuzTMyFuO__a5xoTl1wBTj-BmXYjKg&oe=680045AC" alt="Understanding Culture, Society, and Politics 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1WYmoo6CieSjkVpGZ5CcKWYqvsdvlYKyI/view?usp=sharing">Examine the Concept, 
+                        Characteristics and Forms of 
+                        Stratification Systems Using 
+                        Sociological Perspectives </a>
+                </div>
+            </li>
+            <li>
+                <img src="https://scontent.fceb8-1.fna.fbcdn.net/v/t1.15752-9/483703609_670580435475151_7907969105638790239_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeFEiifstI3zx2HNjTwOUYjF-Nx-SnFsfW743H5KcWx9bksq2vSr3LqVvReIi9T9KH1YQlpiH-4axvoyVP-G9tP7&_nc_ohc=wSW5l7WeoaUQ7kNvgHDuvxI&_nc_oc=AdjNTTjGpJeP4iFsjFLvoVLffySKw8XjS8ylNcjUjrJvvvz_HvwasyrfFvC9OUDxhNM&_nc_ad=z-m&_nc_cid=5917&_nc_zt=23&_nc_ht=scontent.fceb8-1.fna&oh=03_Q7cD1wGIdQdnSBG5jmBbQWDAZ_ao2-DMXcV5LzIyDj_x9C3YEw&oe=68003E12" alt="Understanding Culture, Society, and Politics 2 Module 1">
+                <div>
+                    <a href="https://drive.google.com/file/d/1_Cr5UkAslAOCGOQAEIB4Na2wCKZwrS7h/view?usp=sharing">Explain Government Programs 
+                        and Initiatives in Addressing 
+                        Social Inequalities </a>
+                </div>
+            </li>    
+        </ul>
+            <!-- Add more modules for other topics as needed -->
+        </ul>
+    </div>
+    <footer>
+        <p>&copy; 2025 Sum-ag National High School Digital Library. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>
